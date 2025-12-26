@@ -996,7 +996,7 @@
                                 <div class="step-number">1</div>
                                 <div class="step-content">
                                     <div class="step-title">下载订阅文件</div>
-                                    <div class="step-desc">从GitHub Pages下载现有的Base64订阅文件</div>
+                                    <div class="step-desc">从GitHub API下载现有的Base64订阅文件</div>
                                 </div>
                             </div>
                             <div class="step">
@@ -1723,13 +1723,15 @@
                    parseInt(parts[3]);
         }
 
-        // 下载GitHub订阅文件（优化版本：优先raw URL以避免CORS问题，添加错误处理和重试）
+        // 下载GitHub订阅文件（使用GitHub API）
         async function downloadGitHubSubscription() {
             try {
                 showLoading(true);
                 showStatus('正在从GitHub下载订阅文件...', 'info');
                 
                 const repo = document.getElementById('githubRepo').value.trim();
+                const file = document.getElementById('githubFile').value.trim();
+                const token = document.getElementById('githubToken').value.trim();
                 
                 if (!repo || !repo.includes('/')) {
                     showStatus('错误: GitHub仓库格式不正确，应为"用户名/仓库名"', 'error');
@@ -1737,91 +1739,159 @@
                     return;
                 }
                 
-                // 构建raw URL优先（raw.githubusercontent.com支持CORS）
-                const [username, reponame] = repo.split('/');
-                const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const file = document.getElementById('githubFile').value.trim();
+                // 构建GitHub API URL
+                const apiUrl = `https://api.github.com/repos/${repo}/contents/${file}`;
                 
-                const rawUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${file}`;
-                console.log('优先尝试从raw URL下载:', rawUrl);
+                console.log('正在从GitHub API下载:', apiUrl);
                 
-                let base64Content = null;
+                // 准备请求头
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Cache-Control': 'no-cache'
+                };
                 
-                // 尝试从raw URL下载
-                try {
-                    const rawResponse = await fetch(rawUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'text/plain',
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    if (!rawResponse.ok) {
-                        throw new Error(`raw URL下载失败: ${rawResponse.status} ${rawResponse.statusText}`);
-                    }
-                    
-                    base64Content = await rawResponse.text();
-                } catch (rawError) {
-                    console.warn('raw URL下载失败，尝试Pages URL:', rawError);
-                    
-                    // 备选Pages URL
-                    const pagesUrl = `https://${username}.github.io/${reponame}/${file}`;
-                    console.log('尝试从Pages URL下载:', pagesUrl);
-                    
-                    const pagesResponse = await fetch(pagesUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'text/plain',
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    if (!pagesResponse.ok) {
-                        throw new Error(`Pages URL下载失败: ${pagesResponse.status} ${pagesResponse.statusText}`);
-                    }
-                    
-                    base64Content = await pagesResponse.text();
+                // 如果有token，添加认证头
+                if (token) {
+                    headers['Authorization'] = `token ${token}`;
                 }
+                
+                // 尝试从GitHub API下载
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                console.log('响应状态:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showStatus('文件不存在，将创建新文件', 'warning');
+                        generatedData.remoteNodes = [];
+                        generatedData.githubStats.remote = 0;
+                        updateGitHubStats();
+                        showStatus('✅ 未找到远程订阅文件，将创建新文件', 'success');
+                        showLoading(false);
+                        return;
+                    }
+                    throw new Error(`下载失败: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // GitHub API返回的是base64编码的内容
+                if (!data.content) {
+                    throw new Error('文件内容为空');
+                }
+                
+                // 解码base64内容
+                const base64Content = atob(data.content.replace(/\n/g, ''));
                 
                 // 处理下载的内容
-                if (base64Content) {
-                    processDownloadedContent(base64Content);
-                } else {
-                    throw new Error('无法获取订阅文件内容');
-                }
+                processDownloadedContent(base64Content, data.sha);
                 
             } catch (error) {
                 console.error('下载GitHub订阅文件失败:', error);
-                showStatus(`下载失败: ${error.message}. 请检查网络、仓库设置或CORS问题。`, 'error');
+                showStatus(`下载失败: ${error.message}`, 'error');
+                
+                // 如果API失败，尝试从GitHub Pages下载（作为备用方案）
+                try {
+                    showStatus('正在尝试从GitHub Pages下载...', 'info');
+                    
+                    const repo = document.getElementById('githubRepo').value.trim();
+                    const [username, reponame] = repo.split('/');
+                    const file = document.getElementById('githubFile').value.trim();
+                    
+                    // 使用proxy绕过CORS限制
+                    const proxyUrl = `https://cors-anywhere.herokuapp.com/https://${username}.github.io/${reponame}/${file}`;
+                    
+                    const response = await fetch(proxyUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'text/plain',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const base64Content = await response.text();
+                        processDownloadedContent(base64Content);
+                    } else {
+                        throw new Error('备用方案也失败');
+                    }
+                } catch (fallbackError) {
+                    console.error('备用下载方案失败:', fallbackError);
+                    showStatus('所有下载方案均失败，请检查网络或仓库设置', 'error');
+                }
             } finally {
                 showLoading(false);
             }
         }
 
         // 处理下载的内容
-        function processDownloadedContent(base64Content) {
+        function processDownloadedContent(base64Content, fileSha = null) {
             try {
-                // 解码Base64内容（去除可能的换行和空格）
-                const trimmedBase64 = base64Content.trim();
-                const decodedContent = atob(trimmedBase64);
-                const nodeLinks = decodedContent.split(/\r?\n/).filter(line => {
-                    const trimmed = line.trim();
-                    return trimmed && trimmed.startsWith('vless://');
-                });
+                // 保存文件的SHA（用于后续更新）
+                if (fileSha) {
+                    generatedData.fileSha = fileSha;
+                }
                 
-                generatedData.remoteNodes = nodeLinks;
-                generatedData.githubStats.remote = nodeLinks.length;
+                // 解码Base64内容
+                let decodedContent;
+                try {
+                    // 先尝试直接解码
+                    decodedContent = atob(base64Content);
+                    
+                    // 检查解码后的内容是否是有效的Base64
+                    if (decodedContent.includes('vless://')) {
+                        // 如果直接解码就得到了vless链接，说明原始文件不是Base64编码
+                        generatedData.remoteNodes = decodedContent.split('\n').filter(line => {
+                            const trimmed = line.trim();
+                            return trimmed && trimmed.startsWith('vless://');
+                        });
+                    } else {
+                        // 否则，尝试将解码后的内容再次解码（可能是双重Base64编码）
+                        try {
+                            const doubleDecoded = atob(decodedContent);
+                            if (doubleDecoded.includes('vless://')) {
+                                generatedData.remoteNodes = doubleDecoded.split('\n').filter(line => {
+                                    const trimmed = line.trim();
+                                    return trimmed && trimmed.startsWith('vless://');
+                                });
+                            } else {
+                                // 如果还是不行，使用第一次解码的结果
+                                generatedData.remoteNodes = decodedContent.split('\n').filter(line => {
+                                    const trimmed = line.trim();
+                                    return trimmed && trimmed.startsWith('vless://');
+                                });
+                            }
+                        } catch {
+                            // 如果第二次解码失败，使用第一次解码的结果
+                            generatedData.remoteNodes = decodedContent.split('\n').filter(line => {
+                                const trimmed = line.trim();
+                                return trimmed && trimmed.startsWith('vless://');
+                            });
+                        }
+                    }
+                } catch (decodeError) {
+                    console.error('解码失败:', decodeError);
+                    // 如果解码失败，直接尝试按行分割
+                    generatedData.remoteNodes = base64Content.split('\n').filter(line => {
+                        const trimmed = line.trim();
+                        return trimmed && trimmed.startsWith('vless://');
+                    });
+                }
+                
+                generatedData.githubStats.remote = generatedData.remoteNodes.length;
                 updateGitHubStats();
                 
-                showStatus(`✅ 成功下载并解码 ${nodeLinks.length} 个远程节点`, 'success');
+                showStatus(`✅ 成功下载 ${generatedData.remoteNodes.length} 个远程节点`, 'success');
                 
                 // 显示远程节点信息
-                showRemoteNodesInfo(nodeLinks);
+                showRemoteNodesInfo(generatedData.remoteNodes);
                 
-            } catch (decodeError) {
-                console.error('解码失败:', decodeError);
-                showStatus('错误: 订阅文件解码失败，可能不是有效的Base64格式或内容损坏', 'error');
+            } catch (error) {
+                console.error('处理下载内容失败:', error);
+                showStatus('错误: 处理下载内容失败', 'error');
             }
         }
 
@@ -1850,10 +1920,9 @@
                 
                 // 合并所有节点
                 const allNodes = [...generatedData.vlessLinks, ...generatedData.remoteNodes];
-                generatedData.mergedNodes = allNodes;
                 generatedData.githubStats.merged = allNodes.length;
                 
-                // 去重（基于IP:端口）
+                // 去重（基于节点链接）
                 const uniqueNodes = [];
                 const seenNodes = new Set();
                 
@@ -1867,7 +1936,7 @@
                             uniqueNodes.push(node);
                         }
                     } else {
-                        // 如果无法提取IP:端口，直接添加（以防非标准格式）
+                        // 如果无法提取IP:端口，直接添加
                         uniqueNodes.push(node);
                     }
                 }
@@ -1937,10 +2006,14 @@
                 
                 // 步骤3: 下载远程订阅文件
                 showStatus('步骤1/3: 正在下载远程订阅文件...', 'info');
-                await downloadGitHubSubscription();
+                try {
+                    await downloadGitHubSubscription();
+                } catch (downloadError) {
+                    showStatus('警告: 下载远程订阅文件失败，将只使用本地节点', 'warning');
+                }
                 
                 // 等待下载完成
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 // 步骤4: 合并去重
                 showStatus('步骤2/3: 正在合并节点并去重...', 'info');
@@ -1950,64 +2023,45 @@
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 // 步骤5: 准备上传内容
-                if (generatedData.uniqueNodes.length === 0 && generatedData.vlessLinks.length > 0) {
-                    generatedData.uniqueNodes = [...generatedData.vlessLinks];
+                let finalNodes = [];
+                if (generatedData.uniqueNodes.length > 0) {
+                    finalNodes = generatedData.uniqueNodes;
+                } else if (generatedData.vlessLinks.length > 0) {
+                    finalNodes = generatedData.vlessLinks;
                     generatedData.githubStats.unique = generatedData.vlessLinks.length;
-                }
-                
-                if (generatedData.uniqueNodes.length === 0) {
+                } else {
                     showStatus('错误: 没有可上传的节点数据', 'error');
                     showLoading(false);
                     return;
                 }
                 
-                const nodeText = generatedData.uniqueNodes.join('\n');
-                const base64Content = btoa(nodeText);  // 直接btoa，不需要unescape/encodeURIComponent，因为vless链接是ASCII
+                const nodeText = finalNodes.join('\n');
+                const base64Content = btoa(unescape(encodeURIComponent(nodeText)));
                 
-                // 步骤6: 获取文件SHA（如果存在）
+                // 步骤6: 准备提交到GitHub
                 showStatus('步骤3/3: 正在提交到GitHub...', 'info');
                 
                 // 构建API URL
                 const apiUrl = `https://api.github.com/repos/${repo}/contents/${file}`;
                 
-                // 首先尝试获取现有文件信息
-                let sha = null;
-                try {
-                    const fileInfoResponse = await fetch(apiUrl, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                    
-                    if (fileInfoResponse.ok) {
-                        const fileInfo = await fileInfoResponse.json();
-                        sha = fileInfo.sha;
-                    } else if (fileInfoResponse.status !== 404) {
-                        throw new Error(`获取文件信息失败: ${fileInfoResponse.status} ${fileInfoResponse.statusText}`);
-                    }
-                } catch (shaError) {
-                    console.warn('获取SHA失败，将创建新文件:', shaError);
-                }
-                
                 // 准备提交数据
-                const commitMessage = `更新节点订阅 (${new Date().toLocaleString()}) - 共 ${generatedData.uniqueNodes.length} 个节点`;
+                const commitMessage = `更新节点订阅 (${new Date().toLocaleString()}) - 共 ${finalNodes.length} 个节点`;
                 const commitData = {
                     message: commitMessage,
                     content: base64Content,
                     branch: branch
                 };
                 
-                if (sha) {
-                    commitData.sha = sha;
+                // 如果有文件的SHA（从下载时获取），则添加到提交数据中
+                if (generatedData.fileSha) {
+                    commitData.sha = generatedData.fileSha;
                 }
                 
                 // 提交文件
                 const response = await fetch(apiUrl, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'Authorization': `token ${token}`,
                         'Accept': 'application/vnd.github.v3+json',
                         'Content-Type': 'application/json'
                     },
@@ -2019,7 +2073,7 @@
                     throw new Error(`提交失败: ${response.status} - ${errorData.message || '未知错误'}`);
                 }
                 
-                showStatus(`✅ GitHub同步完成！成功提交 ${generatedData.uniqueNodes.length} 个节点到仓库`, 'success');
+                showStatus(`✅ GitHub同步完成！成功提交 ${finalNodes.length} 个节点到仓库`, 'success');
                 
                 // 显示更新后的订阅链接
                 const [username, reponame] = repo.split('/');
@@ -2027,7 +2081,7 @@
                 showStatus(`订阅链接已更新: ${pagesUrl}`, 'info');
                 
             } catch (error) {
-                showStatus(`GitHub同步失败: ${error.message}. 请检查令牌权限（需要repo scope）、网络或仓库设置。`, 'error');
+                showStatus(`GitHub同步失败: ${error.message}`, 'error');
                 console.error('GitHub同步失败:', error);
             } finally {
                 showLoading(false);
@@ -2121,7 +2175,7 @@
         function generateSubscription() {
             if (generatedData.vlessLinks.length > 0) {
                 const vlessLinksText = generatedData.vlessLinks.join('\n');
-                const base64 = btoa(vlessLinksText);
+                const base64 = btoa(unescape(encodeURIComponent(vlessLinksText)));
                 generatedData.subscription = base64;
                 
                 const subscriptionEl = document.getElementById('subscription');
