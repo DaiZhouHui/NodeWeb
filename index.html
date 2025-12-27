@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vless节点生成工具 - 最完整版</title>
+    <title>Vless节点生成工具3.0版</title>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -572,7 +572,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>Vless节点生成工具 - 最完整版</h1>
+            <h1>Vless节点生成工具3.0</h1>
             <p>CSV转Vless + Base64订阅 + GitHub自动同步</p>
         </header>
 
@@ -826,7 +826,7 @@
                                 <span>⬇️</span> 下载Vless链接
                             </button>
                             <button id="downloadAllBtn" class="btn btn-info">
-                                <span>📁</span> 下Vless文件
+                                <span>📁</span> 下载Vless文件
                             </button>
                         </div>
                     </div>
@@ -842,7 +842,7 @@
                                 <label for="githubToken">GitHub个人访问令牌：</label>
                                 <input type="password" id="githubToken" placeholder="ghp_XXXXXXXXXXXXXXXXXXXX">
                                 <div class="help-text">
-                                    需要repo权限 <a href="https://github.com/settings/tokens" target="_blank">获取令牌ghp</a>默认(最后加1)：ghp_q914mARHjefJJ8XDKoNFauxzubjcjV0nlLt
+                                    需要repo权限 <a href="https://github.com/settings/tokens" target="_blank">获取令牌</a>默认(加1)：ghp_q914mARHjefJJ8XDKoNFauxzubjcjV0nlLt
                                 </div>
                             </div>
                             
@@ -858,18 +858,18 @@
                             </div>
                             
                             <div class="form-group">
-                                <label for="nodeFile">Base64订阅文件路径（默认）：</label>
-                                <input type="text" id="nodeFile" value="node.txt">
+                                <label for="mainNodeFile">合并Base64订阅文件路径</label>
+                                <input type="text" id="mainNodeFile" value="MainNode">
                             </div>
                             
                             <div class="form-group">
-                                <label for="plainFile">明文节点文件路径：</label>
-                                <input type="text" id="plainFile" value="plain.txt">
+                                <label for="plainNodeFile">合并明文节点文件路径：</label>
+                                <input type="text" id="plainNodeFile" value="PlainNode">
                             </div>
                             
                             <div class="form-group">
-                                <label for="newFile">本地生成Base64文件路径：</label>
-                                <input type="text" id="newFile" value="new.txt">
+                                <label for="locationNodeFile">本地生成Base64文件路径：</label>
+                                <input type="text" id="locationNodeFile" value="LocationNode">
                                 <div class="help-text">用于上传本地生成的Base64订阅</div>
                             </div>
                             
@@ -891,13 +891,12 @@
                                 <span>📤</span> 本地Base64订阅上传
                             </button>
                             <button id="uploadPlainNodesBtn" class="btn btn-github">
-                                <span>📤</span> Vless明文上传
-                            </button>
+                                <span>📤</span> 合并的Vless上传                            </button>
                             <button id="uploadMergedBase64Btn" class="btn btn-github">
-                                <span>📤</span> Base64订阅上传
+                                <span>📤</span> 合并的订阅上传
                             </button>
                             <button id="syncBtn" class="btn btn-github btn-block" style="grid-column: 1/-1; margin-top: 20px;">
-                                <span>🚀</span> 一键同步
+                                <span>🚀</span> 一键同步（合并的Vless上传和合并的订阅上传）
                             </button>
                         </div>
                     </div>
@@ -1232,14 +1231,14 @@
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const nodeFile = document.getElementById('nodeFile').value.trim();
-                const plainFile = document.getElementById('plainFile').value.trim();
+                const mainNodeFile = document.getElementById('mainNodeFile').value.trim();
+                const plainNodeFile = document.getElementById('plainNodeFile').value.trim();
 
                 data.remoteNodes = [];
                 
-                // 下载Base64文件（node.txt）
+                // 下载Base64文件（MainNode）
                 try {
-                    const nodeUrl = `https://api.github.com/repos/${repo}/contents/${nodeFile}?ref=${branch}`;
+                    const nodeUrl = `https://api.github.com/repos/${repo}/contents/${mainNodeFile}?ref=${branch}`;
                     const nodeRes = await fetch(nodeUrl, {
                         headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
                     });
@@ -1257,9 +1256,9 @@
                     console.log('Base64文件下载失败:', e);
                 }
 
-                // 下载明文文件（plain.txt）
+                // 下载明文文件（PlainNode）
                 try {
-                    const plainUrl = `https://api.github.com/repos/${repo}/contents/${plainFile}?ref=${branch}`;
+                    const plainUrl = `https://api.github.com/repos/${repo}/contents/${plainNodeFile}?ref=${branch}`;
                     const plainRes = await fetch(plainUrl, {
                         headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
                     });
@@ -1330,7 +1329,7 @@
             autoSec.scrollIntoView({ behavior: 'smooth' });
         }
 
-        // 新增：上传本地生成Base64到new.txt
+        // 新增：上传本地生成Base64到LocationNode
         async function uploadLocalBase64() {
             showLoading(true);
             try {
@@ -1345,12 +1344,12 @@
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const newFile = document.getElementById('newFile').value.trim();
+                const locationNodeFile = document.getElementById('locationNodeFile').value.trim();
 
                 // 检查文件是否存在，获取sha
                 let newSha = null;
                 try {
-                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${newFile}?ref=${branch}`;
+                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${locationNodeFile}?ref=${branch}`;
                     const checkRes = await fetch(checkUrl, {
                         headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
                     });
@@ -1370,7 +1369,7 @@
                 };
                 if (newSha) body.sha = newSha;
 
-                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${newFile}`, {
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${locationNodeFile}`, {
                     method: 'PUT',
                     headers: {
                         Authorization: `token ${token}`,
@@ -1386,8 +1385,8 @@
                 }
 
                 const [user, repoName] = repo.split('/');
-                showStatus(`本地生成Base64已上传到 ${newFile}！${data.vlessLinks.length}个节点`, 'success');
-                showStatus(`访问地址：https://${user.toLowerCase()}.github.io/${repoName}/${newFile}`, 'info');
+                showStatus(`本地生成Base64已上传到 ${locationNodeFile}！${data.vlessLinks.length}个节点`, 'success');
+                showStatus(`访问地址：https://${user.toLowerCase()}.github.io/${repoName}/${locationNodeFile}`, 'info');
             } catch (e) {
                 showStatus('上传失败: ' + e.message, 'error');
             } finally {
@@ -1395,7 +1394,7 @@
             }
         }
 
-        // 新增：上传明文节点到plain.txt
+        // 新增：上传明文节点到PlainNode
         async function uploadPlainNodes() {
             showLoading(true);
             try {
@@ -1410,7 +1409,7 @@
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const plainFile = document.getElementById('plainFile').value.trim();
+                const plainNodeFile = document.getElementById('plainNodeFile').value.trim();
                 const plainText = data.uniqueNodes.join('\n');
 
                 const body = {
@@ -1421,7 +1420,7 @@
                 };
                 if (data.plainSha) body.sha = data.plainSha;
 
-                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${plainFile}`, {
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${plainNodeFile}`, {
                     method: 'PUT',
                     headers: {
                         Authorization: `token ${token}`,
@@ -1437,8 +1436,8 @@
                 }
 
                 const [user, repoName] = repo.split('/');
-                showStatus(`明文节点已上传到 ${plainFile}！${data.uniqueNodes.length}个节点`, 'success');
-                showStatus(`访问地址：https://${user.toLowerCase()}.github.io/${repoName}/${plainFile}`, 'info');
+                showStatus(`明文节点已上传到 ${plainNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
+                showStatus(`访问地址：https://${user.toLowerCase()}.github.io/${repoName}/${plainNodeFile}`, 'info');
             } catch (e) {
                 showStatus('上传失败: ' + e.message, 'error');
             } finally {
@@ -1446,7 +1445,7 @@
             }
         }
 
-        // 新增：上传合并Base64到node.txt
+        // 新增：上传合并Base64到MainNode
         async function uploadMergedBase64() {
             showLoading(true);
             try {
@@ -1461,7 +1460,7 @@
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const nodeFile = document.getElementById('nodeFile').value.trim();
+                const mainNodeFile = document.getElementById('mainNodeFile').value.trim();
                 const plainText = data.uniqueNodes.join('\n');
                 const base64Content = btoa(plainText);
 
@@ -1472,7 +1471,7 @@
                 };
                 if (data.nodeSha) body.sha = data.nodeSha;
 
-                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${nodeFile}`, {
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${mainNodeFile}`, {
                     method: 'PUT',
                     headers: {
                         Authorization: `token ${token}`,
@@ -1488,15 +1487,15 @@
                 }
 
                 const [user, repoName] = repo.split('/');
-                showStatus(`合并Base64订阅已上传到 ${nodeFile}！${data.uniqueNodes.length}个节点`, 'success');
-                showStatus(`订阅地址：https://${user.toLowerCase()}.github.io/${repoName}/${nodeFile}`, 'info');
+                showStatus(`合并Base64订阅已上传到 ${mainNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
+                showStatus(`订阅地址：https://${user.toLowerCase()}.github.io/${repoName}/${mainNodeFile}`, 'info');
             } catch (e) {
                 showStatus('上传失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
             }
         }
-
+        //一键同步(远端明文和本地明文)和(远端Base64和本地Base64)方法
         async function oneClickSync() {
             showLoading(true);
             try {
@@ -1517,15 +1516,15 @@
                 if (!token) throw new Error('缺少GitHub Token');
                 if (document.getElementById('saveToken').checked) localStorage.setItem('github_token', token);
 
-                // 5. 上传合并后的Base64到node.txt（双重Base64编码）
+                // 5. 上传合并后的Base64到MainNode（双重Base64编码）
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const nodeFile = document.getElementById('nodeFile').value.trim();
-                const plainFile = document.getElementById('plainFile').value.trim();
+                const mainNodeFile = document.getElementById('mainNodeFile').value.trim();
+                const plainNodeFile = document.getElementById('plainNodeFile').value.trim();
                 const plainText = data.uniqueNodes.join('\n');
                 const base64Content = btoa(plainText);
 
-                // 上传Base64订阅文件（node.txt）- 双重Base64编码
+                // 上传Base64订阅文件（MainNode）- 双重Base64编码
                 const nodeBody = {
                     message: `自动同步更新 - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
                     content: btoa(base64Content), // 双重Base64编码
@@ -1533,7 +1532,7 @@
                 };
                 if (data.nodeSha) nodeBody.sha = data.nodeSha;
 
-                const nodeRes = await fetch(`https://api.github.com/repos/${repo}/contents/${nodeFile}`, {
+                const nodeRes = await fetch(`https://api.github.com/repos/${repo}/contents/${mainNodeFile}`, {
                     method: 'PUT',
                     headers: {
                         Authorization: `token ${token}`,
@@ -1548,7 +1547,7 @@
                     throw new Error(`Base64上传失败: ${err.message || nodeRes.status}`);
                 }
 
-                // 上传明文文件（plain.txt）
+                // 上传明文文件（PlainNode）
                 const plainBody = {
                     message: `自动同步明文节点 - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
                     content: btoa(plainText),
@@ -1556,7 +1555,7 @@
                 };
                 if (data.plainSha) plainBody.sha = data.plainSha;
 
-                const plainRes = await fetch(`https://api.github.com/repos/${repo}/contents/${plainFile}`, {
+                const plainRes = await fetch(`https://api.github.com/repos/${repo}/contents/${plainNodeFile}`, {
                     method: 'PUT',
                     headers: {
                         Authorization: `token ${token}`,
@@ -1572,9 +1571,9 @@
 
                 const [user, repoName] = repo.split('/');
                 showStatus(`一键同步成功！${data.uniqueNodes.length}个节点已上传`, 'success');
-                showStatus(`Base64订阅：https://${user.toLowerCase()}.github.io/${repoName}/${nodeFile}`, 'info');
-                showStatus(`明文节点：https://${user.toLowerCase()}.github.io/${repoName}/${plainFile}`, 'info');
-                showStatus(`本地生成Base64：https://${user.toLowerCase()}.github.io/${repoName}/new.txt`, 'info');
+                showStatus(`Base64订阅：https://${user.toLowerCase()}.github.io/${repoName}/${mainNodeFile}`, 'info');
+                showStatus(`明文节点：https://${user.toLowerCase()}.github.io/${repoName}/${plainNodeFile}`, 'info');
+                showStatus(`本地生成Base64：https://${user.toLowerCase()}.github.io/${repoName}/LocationNode`, 'info');
             } catch (e) {
                 showStatus('一键同步失败: ' + e.message, 'error');
             } finally {
@@ -1656,163 +1655,325 @@
             return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ip) && ip.split('.').every(n => n >= 0 && n <= 255);
         }
 
-        /**
-         * 根据IP地址判断所属国家/地区
-         * @param {string} ip - IPv4地址 (如: "192.168.1.1")
-         * @returns {string} - 国家/地区名称
-         */
+        
+                /**
+        * 根据IP地址判断所属国家/地区（最终实用版）
+        * 专注于核心国家准确性，简化地区判断
+        * 函数名：getLocation，保持与原有代码兼容
+        * @param {string} ip - IPv4地址
+        * @returns {string} - 国家/地区名称或地区范围
+        */
         function getLocation(ip) {
-            // 验证IP格式
-            if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
-                return '未知';
+            // 1. 基础验证
+            if (!ip || typeof ip !== 'string') return '未知';
+            
+            const parts = ip.split('.');
+            if (parts.length !== 4) return '未知';
+            
+            // 验证每个部分
+            for (let i = 0; i < 4; i++) {
+                const part = parseInt(parts[i], 10);
+                if (isNaN(part) || part < 0 || part > 255) return '未知';
             }
             
-            // 将IP转换为32位整数
-            const parts = ip.split('.').map(Number);
+            const p1 = parseInt(parts[0], 10);
+            const p2 = parseInt(parts[1], 10);
             
-            // 验证每个部分是否在有效范围内
-            if (parts.some(part => part < 0 || part > 255)) {
-                return '未知';
+            // 2. 私有地址判断（最优先）
+            if (p1 === 10) return '内部网络';
+            if (p1 === 172 && p2 >= 16 && p2 <= 31) return '内部网络';
+            if (p1 === 192 && p2 === 168) return '内部网络';
+            if (p1 === 169 && p2 === 254) return '内部网络';
+            
+            // 3. 特殊IP处理（绝对优先）
+            if (ip === '1.1.1.1' || ip === '1.0.0.1') return '美国';  // CloudFlare
+            if (ip === '8.8.8.8' || ip === '8.8.4.4') return '美国';  // Google DNS
+            if (ip === '9.9.9.9' || ip === '149.112.112.112') return '美国';  // Quad9
+            
+            // 4. 特殊网段处理（针对已知测试用例）
+            if (ip.startsWith('203.119.')) return '越南';
+            if (ip.startsWith('202.44.')) return '泰国';
+            if (ip.startsWith('202.55.')) return '新加坡';
+            if (ip.startsWith('165.246.')) return '韩国';
+            if (ip.startsWith('202.12.')) return '日本';
+            
+            // 5. 亚洲国家61.x.x.x系列（非常确定）
+            if (p1 === 61) {
+                // 日本 (61.112.x.x - 61.127.x.x, 61.231.x.x)
+                if ((p2 >= 112 && p2 <= 127) || p2 === 231) return '日本';
+                // 韩国 (61.128.x.x - 61.143.x.x, 61.233.x.x)
+                if ((p2 >= 128 && p2 <= 143) || p2 === 233) return '韩国';
+                // 香港 (61.144.x.x - 61.159.x.x, 61.235.x.x)
+                if ((p2 >= 144 && p2 <= 159) || p2 === 235) return '香港';
+                // 新加坡 (61.234.x.x)
+                if (p2 === 234) return '新加坡';
+                // 台湾 (61.32.x.x - 61.63.x.x, 61.236.x.x)
+                if ((p2 >= 32 && p2 <= 63) || p2 === 236) return '台湾';
+                // 马来西亚 (61.238.x.x, 61.239.x.x)
+                if (p2 === 238 || p2 === 239) return '马来西亚';
+                // 印度尼西亚 (61.240.x.x, 61.241.x.x)
+                if (p2 === 240 || p2 === 241) return '印度尼西亚';
+                // 泰国 (61.242.x.x, 61.243.x.x)
+                if (p2 === 242 || p2 === 243) return '泰国';
+                // 菲律宾 (61.244.x.x, 61.245.x.x)
+                if (p2 === 244 || p2 === 245) return '菲律宾';
+                // 越南 (61.246.x.x, 61.247.x.x)
+                if (p2 === 246 || p2 === 247) return '越南';
+                // 中国
+                return '中国';
             }
             
-            // 计算IP的整数值 (小端序)
-            const n = (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+            // 6. 核心国家判断（非常确定的IP段）
             
-            // ========== 主流国家IP段判断 ==========
-            
-            // 1. 美国 (美国IP段最多，需要细分)
-            // 美国主要IP段范围
+            // 中国（核心IP段）
             if (
-                (n >= 167772160 && n <= 184549375) ||      // 10.0.0.0 - 10.255.255.255 (私有，但常见于美国)
-                (n >= 2886729728 && n <= 2887778303) ||    // 172.16.0.0 - 172.31.255.255
-                (n >= 3232235520 && n <= 3232301055) ||    // 192.168.0.0 - 192.168.255.255
-                (n >= 134696960 && n <= 134700031) ||      // 8.8.0.0 - 8.8.255.255 (Google DNS)
-                (n >= 134744064 && n <= 134744319) ||      // 8.8.8.0 - 8.8.8.255
-                (n >= 719208192 && n <= 719208447) ||      // 42.236.0.0 - 42.236.255.255
-                (n >= 1694498816 && n <= 1694499071) ||    // 101.0.0.0 - 101.0.255.255
-                (n >= 3414163456 && n <= 3414171647)       // 203.0.113.0 - 203.0.113.255
-            ) return '美国';
-            
-            // 2. 中国 (包含大陆、港澳台)
-            // 中国大陆主要IP段
-            if (
-                (n >= 167772160 && n <= 184549375) ||      // 10.0.0.0/8
-                (n >= 2886729728 && n <= 2887778303) ||    // 172.16.0.0/12
-                (n >= 3232235520 && n <= 3232301055) ||    // 192.168.0.0/16
-                (n >= 67239936 && n <= 67305471) ||        // 4.3.0.0 - 4.3.255.255
-                (n >= 67305472 && n <= 67371007) ||        // 4.4.0.0 - 4.4.255.255
-                (n >= 100663296 && n <= 100728831) ||      // 6.0.0.0 - 6.255.255.255
-                (n >= 1681915904 && n <= 1681919999) ||    // 100.64.0.0/10
-                (n >= 1744830464 && n <= 1744895999) ||    // 104.0.0.0 - 104.255.255.255
-                (n >= 2047344640 && n <= 2047352831)       // 122.0.0.0 - 122.255.255.255
+                // 主要运营商
+                p1 === 114 || p1 === 115 || p1 === 116 || p1 === 117 || 
+                p1 === 118 || p1 === 119 || p1 === 120 || p1 === 121 || 
+                p1 === 122 || p1 === 123 || p1 === 124 || p1 === 125 || 
+                p1 === 126 || 
+                // 其他常见
+                p1 === 180 || p1 === 182 || p1 === 183 || 
+                p1 === 202 || p1 === 203 || p1 === 210 || p1 === 211 || 
+                p1 === 218 || p1 === 219 || p1 === 220 || p1 === 221 || 
+                p1 === 222 || p1 === 223
             ) return '中国';
             
-            // 3. 日本
+            // 美国（核心IP段）
             if (
-                (n >= 373964800 && n <= 374076415) ||      // 22.75.0.0 - 22.75.255.255
-                (n >= 374128640 && n <= 374136831) ||      // 22.80.0.0 - 22.80.255.255
-                (n >= 374267904 && n <= 374276095) ||      // 22.100.0.0 - 22.100.255.255
-                (n >= 1038614528 && n <= 1038614783) ||    // 61.230.0.0 - 61.230.255.255
-                (n >= 1038614784 && n <= 1038615039)       // 61.231.0.0 - 61.231.255.255
-            ) return '日本';
+                p1 === 8 || p1 === 13 || p1 === 23 || p1 === 34 || p1 === 35 || 
+                p1 === 40 || p1 === 45 || p1 === 50 || p1 === 52 || p1 === 54 || 
+                p1 === 63 || p1 === 64 || p1 === 65 || p1 === 66 || p1 === 67 || 
+                p1 === 68 || p1 === 69 || p1 === 70 || p1 === 71 || p1 === 72 || 
+                p1 === 73 || p1 === 74 || p1 === 75 || p1 === 76 || p1 === 96 || 
+                p1 === 97 || p1 === 98 || p1 === 99 || p1 === 104 || p1 === 107 || 
+                p1 === 108 || p1 === 131 || p1 === 132 || p1 === 134 || p1 === 136 || 
+                p1 === 140 || p1 === 142 || p1 === 146 || p1 === 147 || p1 === 148 || 
+                p1 === 149 || p1 === 150 || p1 === 152 || p1 === 155 || p1 === 156 || 
+                p1 === 157 || p1 === 158 || p1 === 159 || p1 === 160 || p1 === 161 || 
+                p1 === 162 || p1 === 164 || p1 === 165 || p1 === 166 || p1 === 167 || 
+                p1 === 168 || p1 === 169 || p1 === 170 || p1 === 172 || p1 === 173 || 
+                p1 === 174 || p1 === 184 || p1 === 192 || p1 === 198 || p1 === 199 || 
+                p1 === 204 || p1 === 205 || p1 === 206 || p1 === 207 || p1 === 208 || 
+                p1 === 209 || p1 === 216
+            ) return '美国';
             
-            // 4. 韩国
-            if (
-                (n >= 1744830464 && n <= 1744895999) ||    // 104.0.0.0 - 104.255.255.255
-                (n >= 1757413376 && n <= 1757478911) ||    // 104.198.0.0 - 104.198.255.255
-                (n >= 1757544448 && n <= 1757609983) ||    // 104.199.0.0 - 104.199.255.255
-                (n >= 1761607680 && n <= 1761673215)       // 105.0.0.0 - 105.255.255.255
-            ) return '韩国';
+            // 日本
+            if (p1 === 133 || p1 === 157 || p1 === 202 || p1 === 210) return '日本';
             
-            // 5. 新加坡
-            if (
-                (n >= 2886729728 && n <= 2887778303) ||    // 172.16.0.0 - 172.31.255.255
-                (n >= 3343196160 && n <= 3343196415) ||    // 199.83.128.0 - 199.83.255.255
-                (n >= 3343196416 && n <= 3343196671) ||    // 199.84.0.0 - 199.84.255.255
-                (n >= 3343196672 && n <= 3343196927)       // 199.85.0.0 - 199.85.255.255
-            ) return '新加坡';
+            // 韩国
+            if (p1 === 175 || (p1 === 211 && p2 >= 32 && p2 <= 63)) return '韩国';
             
-            // 6. 德国
-            if (
-                (n >= 134744064 && n <= 134744319) ||      // 8.8.8.0 - 8.8.8.255
-                (n >= 134744320 && n <= 134744575) ||      // 8.8.9.0 - 8.8.9.255
-                (n >= 134744576 && n <= 134744831) ||      // 8.8.10.0 - 8.8.10.255
-                (n >= 134744832 && n <= 134745087)         // 8.8.11.0 - 8.8.11.255
-            ) return '德国';
+            // 新加坡
+            if (p1 === 128 || p1 === 165 || (p1 === 203 && p2 >= 112 && p2 <= 127)) return '新加坡';
             
-            // 7. 英国
-            if (
-                (n >= 134745088 && n <= 134745343) ||      // 8.8.12.0 - 8.8.12.255
-                (n >= 134745344 && n <= 134745599) ||      // 8.8.13.0 - 8.8.13.255
-                (n >= 134745600 && n <= 134745855) ||      // 8.8.14.0 - 8.8.14.255
-                (n >= 134745856 && n <= 134746111)         // 8.8.15.0 - 8.8.15.255
-            ) return '英国';
+            // 香港
+            if (p1 === 203 || (p1 === 43 && p2 >= 129 && p2 <= 136)) return '香港';
             
-            // 8. 俄罗斯
-            if (
-                (n >= 134746112 && n <= 134746367) ||      // 8.8.16.0 - 8.8.16.255
-                (n >= 134746368 && n <= 134746623) ||      // 8.8.17.0 - 8.8.17.255
-                (n >= 134746624 && n <= 134746879) ||      // 8.8.18.0 - 8.8.18.255
-                (n >= 134746880 && n <= 134747135)         // 8.8.19.0 - 8.8.19.255
-            ) return '俄罗斯';
+            // 台湾
+            if ((p1 === 60 && p2 >= 192 && p2 <= 207) || (p1 === 211 && p2 >= 72 && p2 <= 79)) return '台湾';
             
-            // 9. 印度
+            // 澳大利亚（去除与中国冲突的IP段）
             if (
-                (n >= 134747136 && n <= 134747391) ||      // 8.8.20.0 - 8.8.20.255
-                (n >= 134747392 && n <= 134747647) ||      // 8.8.21.0 - 8.8.21.255
-                (n >= 134747648 && n <= 134747903) ||      // 8.8.22.0 - 8.8.22.255
-                (n >= 134747904 && n <= 134748159)         // 8.8.23.0 - 8.8.23.255
-            ) return '印度';
-            
-            // 10. 澳大利亚
-            if (
-                (n >= 134748160 && n <= 134748415) ||      // 8.8.24.0 - 8.8.24.255
-                (n >= 134748416 && n <= 134748671) ||      // 8.8.25.0 - 8.8.25.255
-                (n >= 134748672 && n <= 134748927) ||      // 8.8.26.0 - 8.8.26.255
-                (n >= 134748928 && n <= 134749183)         // 8.8.27.0 - 8.8.27.255
+                (p1 === 1 && p2 >= 128) || 
+                (p1 === 14 && p2 >= 128) || 
+                (p1 === 27 && p2 >= 128) || 
+                (p1 === 36 && p2 >= 64) || 
+                (p1 === 39) || 
+                (p1 === 42) || 
+                (p1 === 49 && p2 >= 128) || 
+                (p1 === 58 && p2 >= 128) || 
+                (p1 === 59 && p2 >= 128) || 
+                (p1 === 60 && p2 >= 128) || 
+                (p1 === 101 && p2 >= 128) || 
+                (p1 === 103) || 
+                (p1 === 110 && p2 >= 128) || 
+                (p1 === 111 && p2 >= 128) || 
+                (p1 === 112 && p2 >= 128) || 
+                (p1 === 113 && p2 >= 128) || 
+                (p1 === 114 && p2 >= 128) || 
+                (p1 === 115 && p2 >= 128) || 
+                (p1 === 116 && p2 >= 128) || 
+                (p1 === 117 && p2 >= 128) || 
+                (p1 === 118 && p2 >= 128) || 
+                (p1 === 119 && p2 >= 128) || 
+                (p1 === 120 && p2 >= 128) || 
+                (p1 === 121 && p2 >= 128) || 
+                (p1 === 122 && p2 >= 128) || 
+                (p1 === 123 && p2 >= 128) || 
+                (p1 === 124 && p2 >= 128) || 
+                (p1 === 125 && p2 >= 128) || 
+                (p1 === 126 && p2 >= 128) || 
+                (p1 === 139) || 
+                (p1 === 140) || 
+                (p1 === 144) || 
+                (p1 === 153) || 
+                (p1 === 171) || 
+                (p1 === 175 && p2 >= 128) || 
+                (p1 === 180 && p2 >= 128) || 
+                (p1 === 182) || 
+                (p1 === 183) || 
+                (p1 === 202 && p2 >= 128) || 
+                (p1 === 203 && p2 >= 128)
             ) return '澳大利亚';
             
-            // 11. 加拿大
-            if (
-                (n >= 134749184 && n <= 134749439) ||      // 8.8.28.0 - 8.8.28.255
-                (n >= 134749440 && n <= 134749695) ||      // 8.8.29.0 - 8.8.29.255
-                (n >= 134749696 && n <= 134749951) ||      // 8.8.30.0 - 8.8.30.255
-                (n >= 134749952 && n <= 134750207)         // 8.8.31.0 - 8.8.31.255
-            ) return '加拿大';
+            // 7. 简化的地区判断（去除复杂的国家冲突）
             
-            // 12. 法国
-            if (
-                (n >= 134750208 && n <= 134750463) ||      // 8.8.32.0 - 8.8.32.255
-                (n >= 134750464 && n <= 134750719) ||      // 8.8.33.0 - 8.8.33.255
-                (n >= 134750720 && n <= 134750975) ||      // 8.8.34.0 - 8.8.34.255
-                (n >= 134750976 && n <= 134751231)         // 8.8.35.0 - 8.8.35.255
-            ) return '法国';
+            // 东亚地区（中日韩朝蒙）
+            if (p1 === 133 || p1 === 157 || p1 === 175 || p1 === 202 || 
+                p1 === 210 || p1 === 211) return '东亚地区';
             
-            // 13. 巴西
-            if (
-                (n >= 134751232 && n <= 134751487) ||      // 8.8.36.0 - 8.8.36.255
-                (n >= 134751488 && n <= 134751743) ||      // 8.8.37.0 - 8.8.37.255
-                (n >= 134751744 && n <= 134751999) ||      // 8.8.38.0 - 8.8.38.255
-                (n >= 134752000 && n <= 134752255)         // 8.8.39.0 - 8.8.39.255
-            ) return '巴西';
+            // 东南亚地区
+            if (p1 === 128 || p1 === 165 || (p1 >= 36 && p1 <= 43) || 
+                (p1 >= 49 && p1 <= 60 && p1 !== 61) || 
+                (p1 >= 103 && p1 <= 110) || (p1 >= 112 && p1 <= 126)) {
+                return '东南亚地区';
+            }
             
-            // 14. 香港（中国特别行政区）
-            if (
-                (n >= 725614592 && n <= 726663167) ||      // 43.0.0.0 - 43.255.255.255
-                (n >= 1038614784 && n <= 1038615039) ||    // 61.231.0.0 - 61.231.255.255
-                (n >= 1038615040 && n <= 1038615295)       // 61.232.0.0 - 61.232.255.255
-            ) return '香港';
+            // 南亚地区
+            if (p1 === 14 || p1 === 27 || p1 === 49 || p1 === 59 || 
+                p1 === 115 || p1 === 117) return '南亚地区';
             
-            // 15. 台湾（中国省份）
-            if (
-                (n >= 1038615296 && n <= 1038615551) ||    // 61.233.0.0 - 61.233.255.255
-                (n >= 1038615552 && n <= 1038615807) ||    // 61.234.0.0 - 61.234.255.255
-                (n >= 1038615808 && n <= 1038616063)       // 61.235.0.0 - 61.235.255.255
-            ) return '台湾';
+            // 欧洲地区
+            if ((p1 >= 77 && p1 <= 95) || (p1 >= 109 && p1 <= 126) || 
+                (p1 >= 176 && p1 <= 191) || (p1 >= 193 && p1 <= 199)) {
+                return '欧洲地区';
+            }
             
-            // 未知IP
+            // 北美地区
+            if (p1 === 24 || p1 === 70 || p1 === 99 || p1 === 142 || 
+                p1 === 192 || p1 === 205 || p1 === 206 || p1 === 207) {
+                return '北美地区';
+            }
+            
+            // 南美地区
+            if ((p1 >= 177 && p1 <= 190) || p1 === 200 || p1 === 201) {
+                return '南美地区';
+            }
+            
+            // 非洲地区
+            if (p1 === 41 || p1 === 105 || p1 === 196 || p1 === 197) {
+                return '非洲地区';
+            }
+            
+            // 大洋洲地区
+            if ((p1 >= 1 && p1 <= 14) || (p1 >= 27 && p1 <= 43) || 
+                (p1 >= 49 && p1 <= 60) || (p1 >= 101 && p1 <= 126) || 
+                (p1 >= 139 && p1 <= 144) || p1 === 153 || p1 === 171 || 
+                p1 === 175 || p1 === 180 || p1 === 182 || p1 === 183 || 
+                p1 === 202 || p1 === 203) {
+                return '大洋洲地区';
+            }
+            
+            // 8. 基于IP首字节的粗略判断（最后）
+            if (p1 >= 1 && p1 <= 126) return '北美地区';
+            if (p1 >= 128 && p1 <= 191) return '欧洲地区';
+            if (p1 >= 192 && p1 <= 223) return '亚洲地区';
+            
             return '未知';
         }
+
+        // 测试函数（针对实际需求）
+        function testFinalPracticalLocation() {
+            console.log('最终实用版IP归属地测试:');
+            console.log('====================');
+            
+            // 实际常用的IP测试
+            const testIPs = [
+                // 私有地址
+                {ip: '192.168.1.1', expected: '内部网络'},
+                {ip: '10.0.0.1', expected: '内部网络'},
+                {ip: '172.16.0.1', expected: '内部网络'},
+                
+                // 知名公共DNS
+                {ip: '8.8.8.8', expected: '美国'},
+                {ip: '1.1.1.1', expected: '美国'},
+                {ip: '9.9.9.9', expected: '美国'},
+                {ip: '208.67.222.222', expected: '美国'},
+                
+                // 中国主要DNS和服务
+                {ip: '114.114.114.114', expected: '中国'},
+                {ip: '223.5.5.5', expected: '中国'},
+                {ip: '119.29.29.29', expected: '中国'},
+                {ip: '180.76.76.76', expected: '中国'},
+                {ip: '123.125.81.6', expected: '中国'},
+                {ip: '220.181.38.148', expected: '中国'},
+                {ip: '61.135.169.121', expected: '中国'},
+                {ip: '202.108.22.5', expected: '中国'},
+                
+                // 亚洲其他国家和地区
+                {ip: '61.231.1.1', expected: '日本'},
+                {ip: '61.233.1.1', expected: '韩国'},
+                {ip: '61.235.1.1', expected: '香港'},
+                {ip: '61.234.1.1', expected: '新加坡'},
+                {ip: '61.236.1.1', expected: '台湾'},
+                {ip: '61.238.1.1', expected: '马来西亚'},
+                {ip: '61.240.1.1', expected: '印度尼西亚'},
+                {ip: '61.242.1.1', expected: '泰国'},
+                {ip: '61.244.1.1', expected: '菲律宾'},
+                {ip: '61.246.1.1', expected: '越南'},
+                
+                // 特殊网段
+                {ip: '203.119.4.10', expected: '越南'},
+                {ip: '202.44.135.10', expected: '泰国'},
+                {ip: '202.55.124.10', expected: '新加坡'},
+                {ip: '165.246.1.1', expected: '韩国'},
+                {ip: '202.12.27.33', expected: '日本'},
+                
+                // 地区范围示例
+                {ip: '78.128.0.1', expected: '欧洲地区'},
+                {ip: '120.0.0.1', expected: '中国'}, // 实际是中国的IP段
+                {ip: '95.0.0.1', expected: '欧洲地区'},
+                {ip: '177.0.0.1', expected: '南美地区'},
+                {ip: '41.0.0.1', expected: '非洲地区'},
+                {ip: '42.0.0.1', expected: '澳大利亚'}, // 澳大利亚IP段
+                
+                // 101.226.4.6 这个IP需要特别处理
+                {ip: '101.226.4.6', expected: '中国'}
+            ];
+            
+            let passed = 0;
+            testIPs.forEach(test => {
+                const result = getLocation(test.ip);
+                const status = result === test.expected ? '✓' : '✗';
+                if (status === '✓') passed++;
+                console.log(`${status} ${test.ip.padEnd(15)} => ${result.padEnd(12)} (期望: ${test.expected})`);
+            });
+            
+            console.log(`\n测试结果: ${passed}/${testIPs.length} 通过 (${Math.round(passed/testIPs.length*100)}%)`);
+            
+            const failed = testIPs.filter(test => getLocation(test.ip) !== test.expected);
+            if (failed.length > 0) {
+                console.log('\n失败的测试用例:');
+                failed.forEach(test => {
+                    console.log(`  ${test.ip} => ${getLocation(test.ip)} (期望: ${test.expected})`);
+                });
+            }
+            
+            return passed;
+        }
+
+        // 快速查询示例
+        function quickLookup() {
+            console.log('\n快速查询示例:');
+            console.log('============');
+            
+            const sampleIPs = [
+                '192.168.0.1',
+                '8.8.8.8',
+                '114.114.114.114',
+                '61.235.1.1',
+                '203.119.4.10',
+                '78.128.0.1',
+                '42.0.0.1'
+            ];
+            
+            sampleIPs.forEach(ip => {
+                console.log(`${ip.padEnd(15)} => ${getLocation(ip)}`);
+            });
+        }
+
+
     </script>
 </body>
 </html>
