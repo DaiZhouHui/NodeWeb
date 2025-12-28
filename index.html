@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vless节点生成工具3.0版</title>
+    <title>Vless节点生成工具4.0版</title>
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3a0ca3;
-            --success-color: #4cc9f0;
-            --info-color: #4895ef;
-            --warning-color: #f72585;
-            --github-color: #24292e;
-            --light-color: #f8f9fa;
-            --border-radius: 12px;
-            --box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-color: #4a56d2;
+            --secondary-color: #3f4bbf;
+            --success-color: #2da69a;
+            --info-color: #3a8fd9;
+            --warning-color: #e0559c;
+            --github-color: #2d3748;
+            --light-color: #f7fafc;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --sidebar-width: 50%;
         }
 
         * {
@@ -26,76 +28,129 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            line-height: 1.6;
+            background: linear-gradient(135deg, #5d6de0 0%, #6a4fa3 100%);
+            color: #2d3748;
+            line-height: 1.4;
             min-height: 100vh;
-            padding: 20px;
+            padding: 18px;
+            font-size: 15px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1650px;
             margin: 0 auto;
+            position: relative;
         }
 
-        header {
+        /* 顶部信息提示条 */
+        .header-info {
             text-align: center;
             color: white;
-            margin-bottom: 40px;
+            margin-bottom: 18px;
             animation: fadeIn 0.8s ease-out;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: var(--border-radius);
+            position: relative;
         }
 
-        header h1 {
-            font-size: 2.8rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .header-info.hidden {
+            display: none;
         }
 
-        header p {
-            font-size: 1.2rem;
+        .header-info h1 {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .header-info p {
+            font-size: 0.9rem;
             opacity: 0.9;
-            max-width: 600px;
+            max-width: 550px;
             margin: 0 auto;
         }
 
-        .main-grid {
+        /* 显示/隐藏提示按钮 */
+        .toggle-header-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .toggle-header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 主布局：调整卡片顺序 */
+        .main-layout {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 30px;
-            margin-bottom: 40px;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+            position: relative;
         }
 
         @media (max-width: 1200px) {
-            .main-grid {
+            .main-layout {
                 grid-template-columns: 1fr;
-                gap: 40px;
+                gap: 24px;
             }
         }
 
+        /* 调整卡片顺序 */
+        .main-layout .card:nth-child(1) {
+            order: 1;
+        }
+        
+        .main-layout .card:nth-child(2) {
+            order: 3;
+        }
+        
+        .main-layout .card:nth-child(3) {
+            order: 2;
+        }
+        
+        .main-layout .card:nth-child(4) {
+            order: 4;
+        }
+
+        /* 卡片 */
         .card {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
             backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.2);
             animation: slideUp 0.6s ease-out;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .card:nth-child(2) {
             animation-delay: 0.2s;
         }
 
+        /* 更简洁的卡片头部 */
         .card-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #5d6de0 0%, #4a56d2 100%);
             color: white;
-            padding: 25px 30px;
+            padding: 10px 6px;
             position: relative;
             overflow: hidden;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .card-header::before {
@@ -105,101 +160,120 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.15), transparent);
             transform: rotate(45deg);
             animation: shine 3s infinite linear;
         }
 
+        /* 更小的卡片标题 - 副标题样式 */
         .card-header h2 {
-            font-size: 1.6rem;
+            font-size: 1.1rem;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             position: relative;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        /* 卡片标题图标更小 */
+        .card-header h2 span {
+            font-size: 12px;
         }
 
         .card-body {
-            padding: 30px;
+            padding: 22px;
+            flex: 1;
+            overflow-y: auto;
         }
 
         .section {
-            margin-bottom: 30px;
+            margin-bottom: 22px;
         }
 
         .section:last-child {
             margin-bottom: 0;
         }
 
+        /* 更小的标题 */
         .section-title {
-            font-size: 1.3rem;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+            font-size: 1rem;
+            color: #4a5568;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .section-title .badge {
             background: var(--primary-color);
             color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
             font-weight: 500;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            position: relative;
         }
 
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #495057;
-            font-size: 0.95rem;
+            color: #4a5568;
+            font-size: 0.9rem;
         }
 
-        input, textarea {
+        input, textarea, select {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 15px;
+            padding: 12px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
             transition: var(--transition);
             background: white;
         }
 
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.15);
             transform: translateY(-1px);
         }
 
+        /* 禁用状态的输入框 */
+        textarea:disabled {
+            background-color: #f7fafc;
+            cursor: not-allowed;
+            opacity: 0.7;
+            border-color: #e2e8f0;
+        }
+
         textarea {
-            min-height: 150px;
+            min-height: 120px;
             font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
+            font-size: 13px;
             resize: vertical;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
         .checkbox-group input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
             cursor: pointer;
         }
 
@@ -208,13 +282,15 @@
             font-weight: 500;
             cursor: pointer;
             user-select: none;
+            font-size: 0.9rem;
+            color: #4a5568;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 11px 18px;
             border: none;
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
@@ -234,7 +310,7 @@
             width: 0;
             height: 0;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
             transform: translate(-50%, -50%);
             transition: width 0.6s, height 0.6s;
         }
@@ -245,17 +321,27 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            background: linear-gradient(135deg, #5d6de0 0%, #4a56d2 100%);
             color: white;
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+            background: linear-gradient(135deg, #2da69a 0%, #25958a 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3a8fd9 0%, #2f7ec7 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #e0559c 0%, #ce4a8c 100%);
             color: white;
         }
 
         .btn-github {
-            background: linear-gradient(135deg, var(--github-color) 0%, #2d333b 100%);
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
             color: white;
         }
 
@@ -264,14 +350,15 @@
             width: 100%;
         }
 
+        /* 文件上传区域 */
         .file-upload-container {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .file-upload-area {
             border: 2px dashed #cbd5e0;
-            border-radius: 10px;
-            padding: 40px 20px;
+            border-radius: 6px;
+            padding: 28px 18px;
             text-align: center;
             cursor: pointer;
             transition: var(--transition);
@@ -281,13 +368,13 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 180px;
+            min-height: 140px;
         }
 
         .file-upload-area:hover {
             border-color: var(--primary-color);
             background: #f0f4ff;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .file-upload-area.dragover {
@@ -296,22 +383,22 @@
         }
 
         .file-upload-area .upload-icon {
-            font-size: 3rem;
+            font-size: 2.4rem;
             color: var(--primary-color);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             opacity: 0.8;
         }
 
         .file-upload-area p {
             color: #4a5568;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 500;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
         }
 
         .file-upload-area small {
             color: #718096;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         #fileInput {
@@ -319,10 +406,10 @@
         }
 
         .file-info {
-            margin-top: 15px;
-            padding: 15px;
+            margin-top: 14px;
+            padding: 14px;
             background: linear-gradient(135deg, #e8f4fd 0%, #d1e9ff 100%);
-            border-radius: 8px;
+            border-radius: 5px;
             border: 1px solid #b6e0fe;
             display: none;
         }
@@ -340,10 +427,11 @@
         .file-name {
             font-weight: 600;
             color: #2d3748;
+            font-size: 0.9rem;
         }
 
         .file-size {
-            font-size: 13px;
+            font-size: 12px;
             color: #718096;
         }
 
@@ -351,9 +439,9 @@
             background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
             color: #c53030;
             border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 14px;
+            border-radius: 4px;
+            padding: 7px 14px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
@@ -362,22 +450,74 @@
         .remove-file-btn:hover {
             background: linear-gradient(135deg, #feb2b2 0%, #fc8181 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(252, 129, 129, 0.3);
+            box-shadow: 0 3px 8px rgba(252, 129, 129, 0.3);
         }
 
+        /* 配置行 */
+        .config-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* GitHub配置 - 修改样式 */
         .github-config {
             background: linear-gradient(135deg, #f6f8fa 0%, #f0f4f8 100%);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 15px;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 0px;
+            border: 1px solid #e1e4e8;
+            position: relative;
+        }
+
+        /* GitHub配置帮助文本 - 放在右上角 */
+        .github-config-help {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 11px;
+            color: #718096;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 6px 10px;
+            border-radius: 4px;
             border: 1px solid #e1e4e8;
         }
 
+        .github-config-help a {
+            color: #5d6de0;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .github-config-help a:hover {
+            text-decoration: underline;
+        }
+
+        /* GitHub三个配置项在一行显示 */
+        .github-config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 120px;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .github-config-row {
+                grid-template-columns: 1fr;
+            }
+            .github-config-help {
+                position: static;
+                margin-top: 10px;
+            }
+        }
+
+        /* 结果框 */
         .result-box {
             background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
             border: 1px solid #e2e8f0;
             position: relative;
         }
@@ -387,34 +527,34 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 4px;
+            width: 3px;
             height: 100%;
-            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(to bottom, #5d6de0, #4a56d2);
         }
 
         .result-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
         }
 
         .result-header h3 {
             color: #2d3748;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
         }
 
         .result-content {
-            max-height: 350px;
+            max-height: 200px;
             overflow-y: auto;
-            padding: 15px;
+            padding: 12px;
             background: white;
-            border-radius: 8px;
+            border-radius: 5px;
             border: 1px solid #e2e8f0;
             font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.4;
             white-space: pre-wrap;
             word-break: break-all;
             color: #4a5568;
@@ -425,126 +565,78 @@
             font-style: italic;
         }
 
-        .status-message {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-            border-left: 4px solid transparent;
+        /* 生成部分 */
+        .generate-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid #e2e8f0;
         }
 
-        .status-success {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-            border-left-color: #28a745;
-            display: block;
-        }
-
-        .status-error {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border-left-color: #dc3545;
-            display: block;
-        }
-
-        .status-info {
-            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-            color: #0c5460;
-            border-left-color: #17a2b8;
-            display: block;
-        }
-
-        .help-text {
-            font-size: 13px;
-            color: #718096;
-            margin-top: 6px;
-            line-height: 1.4;
-        }
-
-        .config-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
+        /* GitHub按钮区域 - 重新调整布局 */
         .github-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        /* GitHub按钮第一行 - 三个按钮 */
+        .github-buttons-row1 {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        /* GitHub按钮第二行 - 三个按钮 */
+        .github-buttons-row2 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* GitHub按钮第三行 - 一键同步 */
+        .github-buttons-row3 {
+            display: block;
         }
 
         @media (max-width: 768px) {
-            .github-buttons {
+            .github-buttons-row1 {
+                grid-template-columns: 1fr;
+            }
+            
+            .github-buttons-row2 {
                 grid-template-columns: 1fr;
             }
         }
 
-        .footer {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            margin-top: 50px;
-            padding: 20px;
-            font-size: 14px;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .source-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-left: 10px;
-        }
-
+        /* GitHub统计 */
         .github-stats {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 14px;
+            margin-top: 16px;
             flex-wrap: wrap;
         }
 
         .stat-item {
             background: white;
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 10px 14px;
+            border-radius: 5px;
             border: 1px solid #e2e8f0;
             font-size: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 100px;
+            min-width: 90px;
         }
 
         .stat-label {
             color: #718096;
             font-weight: 500;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
         }
 
         .stat-value {
@@ -553,31 +645,756 @@
             font-size: 16px;
         }
 
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 30px;
+            padding: 18px;
+            font-size: 13px;
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 18px;
+        }
+
+        .loading-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 14px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 源标记 */
+        .source-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #e0559c, #e53e3e);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        /* 帮助文本 */
+        .help-text {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        /* URL选择容器 */
+        .url-select-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .custom-url-input {
+            display: none;
+        }
+        
+        .custom-url-input.show {
+            display: block;
+            margin-top: 10px;
+        }
+        
+        /* 全局通知窗口样式 */
+        .notification-container {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 1000;
+            max-width: 350px;
+            width: 100%;
+        }
+        
+        .notification {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            border-left: 4px solid var(--primary-color);
+            animation: slideInRight 0.4s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #5d6de0, #4a56d2);
+        }
+        
+        .notification.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .notification.success::before {
+            background: linear-gradient(90deg, #2da69a, #25958a);
+        }
+        
+        .notification.error {
+            border-left-color: #e53e3e;
+        }
+        
+        .notification.error::before {
+            background: linear-gradient(90deg, #e53e3e, #e0559c);
+        }
+        
+        .notification.info {
+            border-left-color: var(--info-color);
+        }
+        
+        .notification.info::before {
+            background: linear-gradient(90deg, #3a8fd9, #2f7ec7);
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3748;
+        }
+        
+        .notification-time {
+            font-size: 11px;
+            color: #718096;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        
+        .notification-message {
+            color: #4a5568;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: #718096;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        
+        .notification-close:hover {
+            color: #e53e3e;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* 日志记录区域 */
+        .log-section {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid #4a5568;
+            color: white;
+            display: none;
+        }
+        
+        .log-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            border-bottom: 1px solid #718096;
+            padding-bottom: 10px;
+        }
+        
+        .log-header h3 {
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .log-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .log-content {
+            max-height: 180px;
+            overflow-y: auto;
+            background: #1a202c;
+            border-radius: 5px;
+            padding: 14px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #4a5568;
+        }
+        
+        .log-entry:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .log-time {
+            color: #a0aec0;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+        
+        .log-level {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 8px;
+            text-transform: uppercase;
+        }
+        
+        .log-level.info {
+            background: rgba(66, 153, 225, 0.25);
+            color: #63b3ed;
+        }
+        
+        .log-level.success {
+            background: rgba(56, 178, 172, 0.25);
+            color: #81e6d9;
+        }
+        
+        .log-level.error {
+            background: rgba(245, 101, 101, 0.25);
+            color: #fc8181;
+        }
+        
+        .log-message {
+            color: #cbd5e0;
+        }
+        
+        /* 修改上传按钮颜色 */
+        .btn-local-upload {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+        }
+        
+        .btn-merge-upload {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+        
+        .btn-subscription-upload {
+            background: linear-gradient(135deg, #0bc5ea 0%, #00b5d8 100%);
+            color: white;
+        }
+        
+        .btn-oneclick-sync {
+            background: linear-gradient(135deg, #e0559c 0%, #ce4a8c 100%);
+            color: white;
+        }
+        
+        /* 手动Vless转Base64订阅输入框 */
+        #manualVlessInput {
+            min-height: 90px;
+            font-size: 13px;
+            padding: 12px;
+        }
+        
+        /* 状态消息 */
+        .status-message {
+            padding: 14px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+            border-left: 3px solid transparent;
+        }
+        
+        .status-success {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+            border-left-color: #38a169;
+            display: block;
+        }
+        
+        .status-error {
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            color: #742a2a;
+            border-left-color: #e53e3e;
+            display: block;
+        }
+        
+        .status-info {
+            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+            color: #2a4365;
+            border-left-color: #3182ce;
+            display: block;
+        }
+        
+        /* 标签页导航 - 修复：确保标签页作用域独立 */
+        .card-tab-navigation {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+        
+        .card-tab-btn {
+            padding: 8px 16px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 5px 5px 0 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .card-tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .card-tab-btn:hover:not(.active) {
+            background: #e2e8f0;
+        }
+        
+        .card-tab-content {
+            display: none;
+        }
+        
+        .card-tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* 高级配置折叠面板 */
+        .accordion {
+            margin-top: 16px;
+        }
+        
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary-color);
+            border: 1px solid #e2e8f0;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        
+        .accordion-header:hover {
+            background: linear-gradient(135deg, #f1f3f5 0%, #e9ecef 100%);
+        }
+        
+        .accordion-header .icon {
+            transition: transform 0.3s;
+            font-size: 13px;
+        }
+        
+        .accordion-header.active .icon {
+            transform: rotate(180deg);
+        }
+        
+        .accordion-content {
+            padding: 16px;
+            background: white;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            display: none;
+        }
+        
+        .accordion-content.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 快捷操作按钮组 - 调整顺序 */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0 0 13px 0;
+            justify-content: center;
+        }
+        
+        .quick-btn {
+            padding: 7px 14px;
+            font-size: 13px;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .quick-btn:hover {
+            background: #f8f9fa;
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        /* 节点计数器 - 修改为指定背景色 */
+        .node-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgb(24 85 204);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* 分割线 */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            margin: 16px 0;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
+        
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
+        
         @keyframes shine {
             0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
             100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                font-size: 14px;
+            }
+            
+            .header-info h1 {
+                font-size: 1.4rem;
+            }
+            
+            .header-info p {
+                font-size: 0.85rem;
+            }
+            
+            .card-header h2 {
+                font-size: 1.05rem;
+            }
+            
+            .config-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            
+            .github-buttons-row1 {
+                grid-template-columns: 1fr;
+            }
+            
+            .github-buttons-row2 {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-content {
+                max-height: 180px;
+            }
+            
+            .quick-actions {
+                justify-content: flex-start;
+            }
+        }
+
+        /* 输入组 */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .input-group input {
+            flex: 1;
+        }
+        
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        
+        /* 提高饱和度但避免马克龙色调 */
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4a56d2 0%, #3f4bbf 100%);
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #25958a 0%, #1e857a 100%);
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #2f7ec7 0%, #276fb2 100%);
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #ce4a8c 0%, #be4081 100%);
+        }
+        
+        .btn-github:hover {
+            background: linear-gradient(135deg, #1a202c 0%, #0d1117 100%);
+        }
+        
+        /* 智能分割说明 */
+        .smart-split-info {
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            border-radius: 6px;
+            padding: 14px;
+            margin-top: 12px;
+            border: 1px solid #81e6d9;
+            font-size: 13px;
+            color: #234e52;
+        }
+        
+        .smart-split-info h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #234e52;
+        }
+        
+        .smart-split-info ul {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .smart-split-info li {
+            margin-bottom: 4px;
+        }
+        
+        /* CSV格式示例 */
+        .csv-example {
+            background: #f7fafc;
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            color: #4a5568;
+            border: 1px dashed #cbd5e0;
+        }
+        
+        /* 提高整体饱和度 */
+        body {
+            background: linear-gradient(135deg, #5d6de0 0%, #6a4fa3 100%);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #5d6de0 0%, #4a56d2 100%);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #5d6de0 0%, #4a56d2 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2da69a 0%, #25958a 100%);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #3a8fd9 0%, #2f7ec7 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #e0559c 0%, #ce4a8c 100%);
+        }
+        
+        .result-box::before {
+            background: linear-gradient(to bottom, #5d6de0, #4a56d2);
+        }
+        
+        /* 新增：令牌保存选项样式 - 修改为小文字显示在GitHub令牌右侧 */
+        .token-save-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+            font-size: 11px;
+            color: #718096;
+            font-weight: normal;
+            padding: 2px 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px;
+            background: #f7fafc;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .token-save-label:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        
+        .token-save-label input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            margin: 0;
+        }
+        
+        /* 新增：上传按钮样式 */
+        .btn-upload-merged {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        /* 新增：路径选择行布局 */
+        .path-select-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .path-select-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 新增：令牌输入组样式 */
+        .token-input-group {
+            position: relative;
+            margin-bottom: 12px;
+        }
+        
+        .token-label-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .token-label {
+            margin-bottom: 0;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
+    <!-- 全局通知容器 -->
+    <div class="notification-container" id="notificationContainer"></div>
+    
     <div class="container">
-        <header>
-            <h1>Vless节点生成工具3.0</h1>
+        <!-- 顶部信息提示条（可隐藏） -->
+        <div class="header-info" id="headerInfo">
+            <button class="toggle-header-btn" id="toggleHeaderBtn">隐藏</button>
+            <h1>Vless节点生成工具4.0</h1>
             <p>CSV转Vless + Base64订阅 + GitHub自动同步</p>
-        </header>
+        </div>
 
-        <div class="main-grid">
-            <!-- 左侧：数据输入和配置 -->
+        <!-- 快捷操作按钮组（调整了顺序） -->
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="generateVless()">
+                <span>⚡</span> 生成节点
+            </button>
+            <button class="quick-btn" onclick="downloadRemote()">
+                <span>⬇️</span> 下载远程
+            </button>
+            <button class="quick-btn" onclick="mergeAndShow()">
+                <span>🔄</span> 合并节点
+            </button>
+            <button class="quick-btn" onclick="oneClickSync()">
+                <span>🚀</span> 一键同步
+            </button>
+            <button class="quick-btn" onclick="uploadLocalBase64ToPath()">
+                <span>📤</span> 上传本地订阅至指定路径
+            </button>
+            <button class="quick-btn" onclick="uploadMergedBase64()">
+                <span>📤</span> 上传合并主要订阅
+            </button>
+            <button class="quick-btn" onclick="uploadMergedOptimal()">
+                <span>📤</span> 上传合并优选订阅
+            </button>
+            <button class="quick-btn" onclick="uploadPlainNodes()">
+                <span>📤</span> 上传合并明文订阅
+            </button>
+            <button class="quick-btn" onclick="toggleLog()">
+                <span>📋</span> 显示日志
+            </button>
+            <button class="quick-btn" onclick="document.getElementById('toggleHeaderBtn').click()">
+                <span>👁️</span> 显示/隐藏标题
+            </button>
+        </div>
+
+        <div class="main-layout">
+            <!-- CSV数据源卡片 - 最常用 -->
             <div class="card">
                 <div class="card-header">
                     <h2>
@@ -587,105 +1404,138 @@
                     </h2>
                 </div>
                 <div class="card-body">
-                    <div class="section">
-                        <div class="section-title">
-                            <span>📤 上传CSV文件</span>
-                            <span class="badge">优先使用</span>
-                        </div>
-                        
-                        <div class="file-upload-container">
-                            <div class="file-upload-area" id="dropArea">
-                                <div class="upload-icon">📁</div>
-                                <p><strong>拖放CSV文件到此处，或点击选择</strong></p>
-                                <small>支持.csv或.txt文件格式</small>
-                                <input type="file" id="fileInput" accept=".csv,.txt">
-                            </div>
-                            
-                            <div id="fileInfo" class="file-info">
-                                <div class="file-info-content">
-                                    <div class="file-info-text">
-                                        <span id="fileName" class="file-name"></span>
-                                        <span id="fileSize" class="file-size"></span>
+                    <!-- CSV数据源标签页导航 -->
+                    <div class="card-tab-navigation" id="csvTabNav">
+                        <button class="card-tab-btn active" data-tab="upload-tab">上传文件</button>
+                        <button class="card-tab-btn" data-tab="paste-tab">粘贴内容</button>
+                        <button class="card-tab-btn" data-tab="config-tab">配置</button>
+                    </div>
+                    
+                    <!-- 上传文件标签页 -->
+                    <div class="card-tab-content active" id="upload-tab">
+                        <div class="section">
+                            <div class="file-upload-container">
+                                <div class="file-upload-area" id="dropArea">
+                                    <div class="upload-icon">📁</div>
+                                    <p><strong>拖放CSV文件到此处，或点击选择</strong></p>
+                                    <small>支持.csv或.txt文件格式</small>
+                                    <input type="file" id="fileInput" accept=".csv,.txt">
+                                </div>
+                                
+                                <div id="fileInfo" class="file-info">
+                                    <div class="file-info-content">
+                                        <div class="file-info-text">
+                                            <span id="fileName" class="file-name"></span>
+                                            <span id="fileSize" class="file-size"></span>
+                                        </div>
+                                        <button type="button" id="removeFileBtn" class="remove-file-btn">
+                                            <span>🗑️</span> 移除
+                                        </button>
                                     </div>
-                                    <button type="button" id="removeFileBtn" class="remove-file-btn">
-                                        <span>🗑️</span> 移除文件
-                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="section-title">
+                                <span>📊 CSV列配置</span>
+                            </div>
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label for="ipColumn">IP地址列</label>
+                                    <input type="number" id="ipColumn" value="0" min="0">
+                                    <div class="help-text">A列=0，B列=1，以此类推</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="portColumn">端口列</label>
+                                    <input type="number" id="portColumn" value="7" min="-1">
+                                    <div class="help-text">-1表示无端口列，使用默认端口</div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- CSV列配置 -->
-                        <div class="section-title">
-                            <span>📊 CSV列配置</span>
-                        </div>
-                        <div class="config-row">
-                            <div class="form-group">
-                                <label for="ipColumn">IP地址列（默认A列）</label>
-                                <input type="number" id="ipColumn" value="0" min="0">
-                                <div class="help-text">A列=0，B列=1，以此类推</div>
-                            </div>
-                            <div class="form-group">
-                                <label for="portColumn">端口列（默认H列）</label>
-                                <input type="number" id="portColumn" value="7" min="-1">
-                                <div class="help-text">-1表示无端口列，将使用默认端口</div>
-                            </div>
-                        </div>
                     </div>
-
-                    <div class="section">
-                        <div class="section-title">
-                            <span>📝 或粘贴CSV内容</span>
-                            <span class="badge">备用选项</span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="csvInput">CSV数据内容：</label>
-                            <textarea id="csvInput" placeholder="每行一个服务器，支持多种格式：
-• IP,端口（逗号分隔）
-• IP:端口（冒号分隔）
-• IP 端口（空格分隔）
-• 只有IP（使用默认端口）
-
-示例：
-8.209.202.241,443
-104.238.162.245:8080
-45.76.123.234 8443
-108.61.123.45"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-title">
-                            <span>⚙️ 节点配置</span>
-                        </div>
-                        
-                        <div class="config-row">
-                            <div class="form-group">
-                                <label for="defaultPort">默认端口（无端口时使用）</label>
-                                <input type="number" id="defaultPort" value="443" min="1" max="65535">
+                    
+                    <!-- 粘贴内容标签页 -->
+                    <div class="card-tab-content" id="paste-tab">
+                        <div class="section">
+                            <div class="section-title">
+                                <span>📝 粘贴CSV或IP和端口内容</span>
                             </div>
                             
                             <div class="form-group">
-                                <label for="remarksPrefix">别名前缀（属地无法识别时使用）</label>
-                                <input type="text" id="remarksPrefix" value="自选">
+                                <label for="csvInput">CSV数据内容：</label>
+                                <textarea id="csvInput" placeholder="支持多种格式，智能分割：
+1. 单行或多行格式：
+2. 紧凑格式（一行多个）：
+3. 混合分隔符：
+4. 只有IP（使用默认端口）："></textarea>
                             </div>
-                        </div>
-                        
-                        <!-- 新增：强制443端口选项 -->
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="forcePort443">
-                            <label for="forcePort443"><strong>强制所有节点使用443端口</strong></label>
-                        </div>
-
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="autoLocation" checked>
-                            <label for="autoLocation"><strong>自动识别IP属地生成别名</strong></label>
+                            
+                            <!-- 智能分割说明 -->
+                            <div class="smart-split-info">
+                                <h4>📋 智能分割说明</h4>
+                                <p>支持以下格式（自动识别）：</p>
+                                <ul>
+                                    <li>IP:端口（冒号分隔）</li>
+                                    <li>IP,端口（逗号分隔）</li>
+                                    <li>IP 端口（单个或多个空格分隔）</li>
+                                    <li>IP;端口（分号分隔）</li>
+                                    <li>只有IP（使用默认端口）</li>
+                                </ul>
+                                <p>支持混合格式和紧凑格式，自动去重和清理。</p>
+                                <!-- CSV格式示例 -->
+                            <div class="csv-example">
+                                <strong>示例：</strong><br>
+                                8.209.202.241:443<br>
+                                104.238.162.245,8080<br>
+                                45.76.123.234 8443<br>
+                                142.93.128.233<br>
+                                15.25.152.123    8443  (多个空格)
+                                                          </div>
+                            </div>
+                            
                         </div>
                     </div>
+                    
+                    <!-- 配置标签页 -->
+                    <div class="card-tab-content" id="config-tab">
+                        <div class="section">
+                            <div class="section-title">
+                                <span>⚙️ 节点配置</span>
+                            </div>
+                            
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label for="defaultPort">默认端口</label>
+                                    <input type="number" id="defaultPort" value="443" min="1" max="65535">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="remarksPrefix">别名前缀</label>
+                                    <input type="text" id="remarksPrefix" value="自选">
+                                </div>
+                            </div>
+                            
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="forcePort443">
+                                <label for="forcePort443"><strong>强制所有节点使用443端口</strong></label>
+                            </div>
 
-                    <div class="section">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="autoLocation" checked>
+                                <label for="autoLocation"><strong>自动识别IP属地生成别名</strong></label>
+                            </div>
+                            
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="renameOnMerge" checked>
+                                <label for="renameOnMerge"><strong>合并时重新设置所有节点别名</strong></label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 生成按钮区域 -->
+                    <div class="generate-section">
                         <div class="section-title">
                             <span>🚀 生成操作</span>
+                            <span id="localNodeCount" class="node-counter">0节点</span>
                         </div>
                         
                         <button id="generateBtn" class="btn btn-primary btn-block">
@@ -696,63 +1546,75 @@
                             <div class="loading-spinner"></div>
                             <p>正在处理数据，请稍候...</p>
                         </div>
-                        
-                        <div id="status" class="status-message"></div>
                     </div>
-
-                    <div class="section">
-                        <div class="section-title">
+                    
+                    <!-- 高级配置折叠面板 -->
+                    <div class="accordion">
+                        <div class="accordion-header" id="advancedConfigToggle">
                             <span>⚙️ 高级配置（固定默认值）</span>
+                            <span class="icon">▼</span>
                         </div>
-                        
-                        <div class="config-row">
-                            <div class="form-group">
-                                <label>用户ID (UUID)</label>
-                                <input type="text" id="uuid" value="471a8e64-7b21-4703-b1d1-45a221098459" readonly>
+                        <div class="accordion-content" id="advancedConfigContent">
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label>用户ID (UUID)</label>
+                                    <input type="text" id="uuid" value="471a8e64-7b21-4703-b1d1-45a221098459" readonly>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>伪装域名 (Host)</label>
+                                    <input type="text" id="host" value="knny.dpdns.org">
+                                </div>
                             </div>
                             
-                            <div class="form-group">
-                                <label>伪装域名 (Host)</label>
-                                <input type="text" id="host" value="knny.dpdns.org">
+                            <div class="config-row">
+                                <div class="form-group">
+                                    <label>SNI域名</label>
+                                    <input type="text" id="sni" value="knny.dpdns.org">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>浏览器指纹 (fp)</label>
+                                    <input type="text" id="fp" value="chrome">
+                                </div>
                             </div>
-                            
-                            <div class="form-group">
-                                <label>SNI域名</label>
-                                <input type="text" id="sni" value="knny.dpdns.org">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>浏览器指纹 (fp)</label>
-                                <input type="text" id="fp" value="chrome">
-                            </div>
-                        </div>
 
-                        <div class="help-text">
-                            其他固定参数：<br>
-                            • 加密方式：none<br>
-                            • 网络类型：ws<br>
-                            • Path：/<br>
-                            • TLS：启用<br>
-                            • Flow：空<br>
-                            • 伪装方式：空
+                            <div class="help-text">
+                                其他固定参数：<br>
+                                • 加密方式：none<br>
+                                • 网络类型：ws<br>
+                                • Path：/<br>
+                                • TLS：启用<br>
+                                • Flow：空<br>
+                                • 伪装方式：空
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- 右侧：结果输出和GitHub同步 -->
+            
+            <!-- 生成结果卡片 - 常用 -->
             <div class="card">
                 <div class="card-header">
                     <h2>
                         <span>📊</span>
-                        生成结果 & GitHub同步
+                        生成结果（节点汇总）
                         <span id="resultCount" class="badge">0节点</span>
                     </h2>
                 </div>
                 <div class="card-body">
-                    <div class="section">
+                    <!-- 生成结果标签页 -->
+                    <div class="card-tab-navigation" id="resultTabNav">
+                        <button class="card-tab-btn active" data-tab="vless-tab">本地Vless</button>
+                        <button class="card-tab-btn" data-tab="local-base64-tab">本地Base64</button>
+                        <button class="card-tab-btn" data-tab="merged-tab">合并Vless</button>
+                        <button class="card-tab-btn" data-tab="auto-base64-tab">合并Base64</button>
+                    </div>
+                    
+                    <!-- Vless链接标签页 -->
+                    <div class="card-tab-content active" id="vless-tab">
                         <div class="result-header">
-                            <h3>🔗 Vless节点链接（本地生成）</h3>
+                            <h3>🔗 Vless链接（本地生成）</h3>
                             <button id="copyVlessBtn" class="btn btn-success">
                                 <span>📋</span> 复制全部Vless链接
                             </button>
@@ -760,14 +1622,21 @@
                         <div class="result-box">
                             <div id="vless-links" class="result-content empty">Vless链接将在这里显示...</div>
                         </div>
+                        
+                        <div class="button-group" style="margin-top: 14px;">
+                            <!-- 只保留一个下载按钮 -->
+                            <button id="downloadAllBtn" class="btn btn-success">
+                                <span>📁</span> 下载明文订阅文件
+                            </button>
+                        </div>
                     </div>
-
-                    <!-- 新增：本地生成自动转Base64订阅 -->
-                    <div class="section" id="localBase64Section" style="display: none;">
+                    
+                    <!-- 本地Base64标签页 -->
+                    <div class="card-tab-content" id="local-base64-tab">
                         <div class="result-header">
-                            <h3>🔗 Base64订阅（本地生成节点自动转换）</h3>
+                            <h3>🔗 Base64订阅（本地生成）</h3>
                             <button id="copyLocalBase64Btn" class="btn btn-success">
-                                <span>📋</span> 一键复制Base64
+                                <span>📋</span> 复制Base64
                             </button>
                         </div>
                         <div class="result-box">
@@ -777,131 +1646,9 @@
                             此Base64可直接作为订阅链接导入Clash、Shadowrocket等工具
                         </div>
                     </div>
-
-                    <!-- 手动Vless转Base64功能（保留） -->
-                    <div class="section">
-                        <div class="section-title">
-                            <span>🔄 手动Vless转Base64订阅</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="manualVlessInput">粘贴Vless明文节点（每行一个）</label>
-                            <textarea id="manualVlessInput" placeholder="粘贴vless://开头的节点链接，每行一个"></textarea>
-                        </div>
-                        <div class="config-row">
-                            <button id="convertToBase64Btn" class="btn btn-success">
-                                <span>🔗</span> 转换为Base64订阅
-                            </button>
-                            <button id="copyManualBase64Btn" class="btn btn-info">
-                                <span>📋</span> 复制Base64订阅
-                            </button>
-                        </div>
-                        <div class="result-box" id="manualBase64Section" style="display: none; margin-top: 20px;">
-                            <div class="result-header">
-                                <h3>手动转换的Base64订阅</h3>
-                            </div>
-                            <div id="manualBase64Output" class="result-content empty">Base64内容将在这里显示...</div>
-                        </div>
-                    </div>
-
-                    <!-- 自动Base64订阅展示框（合并后） -->
-                    <div class="section" id="autoBase64Section" style="display: none;">
-                        <div class="result-header">
-                            <h3>🔗 Base64订阅内容（本地+远程合并去重后）</h3>
-                            <button id="copyAutoBase64Btn" class="btn btn-success">
-                                <span>📋</span> 复制Base64
-                            </button>
-                        </div>
-                        <div class="result-box">
-                            <div id="autoBase64Output" class="result-content empty">合并去重后将自动生成Base64订阅内容...</div>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-title">
-                            <span>💾 下载结果</span>
-                        </div>
-                        
-                        <div class="config-row">
-                            <button id="downloadVlessBtn" class="btn btn-success">
-                                <span>⬇️</span> 下载Vless链接
-                            </button>
-                            <button id="downloadAllBtn" class="btn btn-info">
-                                <span>📁</span> 下载Vless文件
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <div class="section-title">
-                            <span>🐙 GitHub订阅同步</span>
-                        </div>
-                        
-                        <div class="github-config">
-                            <h4><span>🔧</span> GitHub配置</h4>
-                            <div class="form-group">
-                                <label for="githubToken">GitHub个人访问令牌：</label>
-                                <input type="password" id="githubToken" placeholder="ghp_XXXXXXXXXXXXXXXXXXXX">
-                                <div class="help-text">
-                                    需要repo权限 <a href="https://github.com/settings/tokens" target="_blank">获取令牌</a>默认(加1)：ghp_q914mARHjefJJ8XDKoNFauxzubjcjV0nlLt
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="githubRepo">GitHub仓库：</label>
-                                <input type="text" id="githubRepo" value="DaiZhouHui/CustomNode">
-                                <div class="help-text">注意大小写：DaiZhouHui/CustomNode</div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="githubBranch">分支：</label>
-                                <input type="text" id="githubBranch" value="main">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="mainNodeFile">合并Base64订阅文件路径</label>
-                                <input type="text" id="mainNodeFile" value="MainNode">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="plainNodeFile">合并明文节点文件路径：</label>
-                                <input type="text" id="plainNodeFile" value="PlainNode">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="locationNodeFile">本地生成Base64文件路径：</label>
-                                <input type="text" id="locationNodeFile" value="LocationNode">
-                                <div class="help-text">用于上传本地生成的Base64订阅</div>
-                            </div>
-                            
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="saveToken" checked>
-                                <label for="saveToken">保存令牌到本地存储</label>
-                            </div>
-                        </div>
-                        
-                        <div class="github-buttons">
-                            <button id="downloadSubBtn" class="btn btn-primary">
-                                <span>⬇️</span> 下载远程订阅文件
-                            </button>
-                            <button id="mergeBtn" class="btn btn-success">
-                                <span>🔄</span> 本地与远程节点合并
-                            </button>
-                            <!-- 新增的三个独立上传按钮 -->
-                            <button id="uploadLocalBase64Btn" class="btn btn-github">
-                                <span>📤</span> 本地Base64订阅上传
-                            </button>
-                            <button id="uploadPlainNodesBtn" class="btn btn-github">
-                                <span>📤</span> 合并的Vless上传                            </button>
-                            <button id="uploadMergedBase64Btn" class="btn btn-github">
-                                <span>📤</span> 合并的订阅上传
-                            </button>
-                            <button id="syncBtn" class="btn btn-github btn-block" style="grid-column: 1/-1; margin-top: 20px;">
-                                <span>🚀</span> 一键同步（合并的Vless上传和合并的订阅上传）
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="section" id="mergedSection" style="display: none;">
+                    
+                    <!-- 合并结果标签页 -->
+                    <div class="card-tab-content" id="merged-tab">
                         <div class="result-header">
                             <h3>🔄 合并结果预览（明文）</h3>
                             <button id="copyMergedBtn" class="btn btn-success">
@@ -912,7 +1659,150 @@
                             <div id="mergedResult" class="result-content empty">合并后的节点将在这里显示...</div>
                         </div>
                     </div>
-
+                    
+                    <!-- 合并Base64订阅标签页 -->
+                    <div class="card-tab-content" id="auto-base64-tab">
+                        <div class="result-header">
+                            <h3>🔗 Base64订阅（本地+远程合并）</h3>
+                            <button id="copyAutoBase64Btn" class="btn btn-success">
+                                <span>📋</span> 复制Base64
+                            </button>
+                        </div>
+                        <div class="result-box">
+                            <div id="autoBase64Output" class="result-content empty">合并去重后将自动生成Base64订阅内容...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GitHub同步卡片 - 次常用 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <span>🐙</span>
+                        GitHub订阅同步
+                        <span class="node-counter" id="syncNodeCount">0节点</span>
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="github-config">
+                        <!-- GitHub配置帮助文本 - 放在右上角 -->
+                        <div class="github-config-help">
+                            GitHub API令牌，需repo权限 <a href="https://github.com/settings/tokens" target="_blank">获取令牌</a>ghp_q914mARHjefJJ8XDKoNFauxzubjcjV0nlLt(加1)
+                        </div>
+                        
+                        <div class="section-title">
+                            <span>🔧 GitHub配置</span>
+                        </div>
+                        
+                        <!-- GitHub三个配置项在一行显示 -->
+                        <div class="github-config-row">
+                            <div class="form-group">
+                                <div class="token-label-container">
+                                    <label for="githubToken" class="token-label">GitHub令牌：</label>
+                                    <!-- 保存令牌到本地存储 - 修改为小文字显示在标签右侧 -->
+                                    <label class="token-save-label" for="saveToken">
+                                        <input type="checkbox" id="saveToken" checked>
+                                        保存令牌到本地存储
+                                    </label>
+                                </div>
+                                <input type="password" id="githubToken" placeholder="ghp_XXXXXXXXXXXXXXXXXXXX">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="githubRepo">GitHub仓库：</label>
+                                <input type="text" id="githubRepo" value="DaiZhouHui/CustomNode">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="githubBranch">分支：</label>
+                                <input type="text" id="githubBranch" value="main">
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：优选订阅文件、主要订阅文件、明文订阅文件 -->
+                        <div class="config-row">
+                            <div class="form-group">
+                                <label for="optimalNodeFile">优选订阅文件</label>
+                                <input type="text" id="optimalNodeFile" value="OptimalNode">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="mainNodeFile">主要订阅文件</label>
+                                <input type="text" id="mainNodeFile" value="MainNode">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="plainNodeFile">明文订阅文件</label>
+                                <input type="text" id="plainNodeFile" value="PlainNode">
+                            </div>
+                        </div>
+                        
+                        <!-- 路径选择行 - 两个选择框在同一行 -->
+                        <div class="path-select-row">
+                            <div class="form-group">
+                                <label for="downloadUrlSelect">下载远程订阅路径：</label>
+                                <select id="downloadUrlSelect">
+                                    <option value="MainNode">MainNode（主要订阅）</option>
+                                    <option value="OptimalNode">OptimalNode（优选订阅）</option>
+                                    <option value="PlainNode">PlainNode（明文订阅）</option>
+                                    <option value="custom">自定义路径</option>
+                                </select>
+                                <input type="text" id="customDownloadUrl" class="custom-url-input" placeholder="输入自定义路径，如：OtherNode">
+                                <div class="help-text">选择要下载的远程订阅文件路径</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="uploadPathSelect">生成订阅待上传路径：</label>
+                                <select id="uploadPathSelect">
+                                    <option value="OptimalNode">OptimalNode（优选订阅）</option>
+                                    <option value="MainNode">MainNode（主要订阅）</option>
+                                    <option value="PlainNode">PlainNode（明文订阅）</option>
+                                    <option value="custom">自定义路径</option>
+                                </select>
+                                <input type="text" id="customUploadPath" class="custom-url-input" placeholder="输入自定义路径，如：OtherNode">
+                                <div class="help-text">选择订阅的待上传到远程的路径</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- GitHub操作按钮 - 重新调整布局 -->
+                    <div class="github-buttons">
+                        <!-- 第一行：三个按钮 -->
+                        <div class="github-buttons-row1">
+                            <button id="downloadSubBtn" class="btn btn-primary">
+                                <span>⬇️</span> 下载远程订阅
+                            </button>
+                            <button id="mergeBtn" class="btn btn-success">
+                                <span>🔄</span> 本地与远程合并去重
+                            </button>
+                            <button id="uploadLocalBase64ToPathBtn" class="btn btn-local-upload">
+                                <span>📤</span> 上传本地订阅至指定路径
+                            </button>
+                        </div>
+                        
+                        <!-- 第二行：三个按钮 -->
+                        <div class="github-buttons-row2">
+                            <button id="uploadMergedOptimalBtn" class="btn btn-upload-merged">
+                                <span>📤</span> 上传合并优选订阅
+                            </button>
+                            <button id="uploadMergedBase64Btn" class="btn btn-subscription-upload">
+                                <span>📤</span> 上传合并的主要订阅
+                            </button>
+                            <button id="uploadPlainNodesBtn" class="btn btn-merge-upload">
+                                <span>📤</span> 上传合并明文订阅
+                            </button>
+                        </div>
+                        
+                        <!-- 第三行：一键同步 -->
+                        <div class="github-buttons-row3">
+                            <button id="syncBtn" class="btn btn-oneclick-sync btn-block">
+                                <span>🚀</span> 一键同步（全部上传）
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- GitHub统计 -->
                     <div class="github-stats" id="githubStats" style="display: none;">
                         <div class="stat-item">
                             <span class="stat-label">本地节点</span>
@@ -931,12 +1821,64 @@
                             <span class="stat-value" id="uniqueNodes">0</span>
                         </div>
                     </div>
+                    
+                    <!-- 日志记录区域 -->
+                    <div class="log-section" id="logSection">
+                        <div class="log-header">
+                            <h3>📝 操作日志</h3>
+                            <div class="log-controls">
+                                <button id="clearLogBtn" class="btn btn-info" style="padding: 6px 12px; font-size: 12px;">
+                                    <span>🗑️</span> 清空日志
+                                </button>
+                                <button id="toggleLogBtn" class="btn btn-info" style="padding: 6px 12px; font-size: 12px;">
+                                    <span>📋</span> 收起日志
+                                </button>
+                            </div>
+                        </div>
+                        <div class="log-content" id="logContent">
+                            <div class="log-entry">
+                                <span class="log-time" id="logTime">[系统启动]</span>
+                                <span class="log-level info">信息</span>
+                                <span class="log-message">Vless节点生成工具已启动</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 手动转换卡片 - 最少用 -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <span>🔄</span>
+                        手动Vless转Base64工具
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="manualVlessInput">粘贴Vless节点（每行一个）</label>
+                        <textarea id="manualVlessInput" placeholder="粘贴vless://开头的节点链接，每行一个"></textarea>
+                    </div>
+                    <div class="button-group">
+                        <button id="convertToBase64Btn" class="btn btn-success">
+                            <span>🔗</span> 转换为Base64
+                        </button>
+                        <button id="copyManualBase64Btn" class="btn btn-info">
+                            <span>📋</span> 复制Base64
+                        </button>
+                    </div>
+                    <div class="result-box" id="manualBase64Section" style="display: none; margin-top: 12px;">
+                        <div class="result-header">
+                            <h3>手动转换的Base64订阅</h3>
+                        </div>
+                        <div id="manualBase64Output" class="result-content empty">Base64内容将在这里显示...</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>© 2025 Vless节点生成工具</p>
+            <p>© 2025 Vless节点生成工具 4.0 优化版</p>
         </div>
     </div>
 
@@ -951,9 +1893,22 @@
             uniqueNodes: [],
             nodeSha: null,
             plainSha: null,
-            newSha: null,
+            optimalSha: null, // 新增：优选订阅文件的sha
+            locationSha: null, // 本地生成Base64文件的sha
             stats: { local: 0, remote: 0, merged: 0, unique: 0 },
             currentSource: 'none'
+        };
+        
+        // 新增：日志数据
+        let logData = {
+            entries: [],
+            maxEntries: 50
+        };
+        
+        // 新增：通知数据
+        let notifications = {
+            active: [],
+            maxNotifications: 5
         };
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -961,6 +1916,25 @@
             initEvents();
             loadSavedToken();
             updateStats();
+            addLog('系统启动', 'Vless节点生成工具已启动', 'info');
+            initTabs();
+            initAccordion();
+            initHeaderToggle();
+            
+            // 初始化粘贴输入框状态
+            updateCSVInputState();
+            
+            // 初始化上传路径选择
+            initUploadPathSelect();
+            
+            // 自动隐藏标题提示
+            setTimeout(() => {
+                const headerInfo = document.getElementById('headerInfo');
+                if (headerInfo && !headerInfo.classList.contains('hidden')) {
+                    headerInfo.classList.add('hidden');
+                    showNotification('提示', '标题已自动隐藏，点击"显示/隐藏标题"按钮可重新显示', 'info');
+                }
+            }, 5000);
         });
 
         function initEvents() {
@@ -968,7 +1942,7 @@
             document.getElementById('removeFileBtn').addEventListener('click', removeFile);
             document.getElementById('generateBtn').addEventListener('click', generateVless);
             document.getElementById('copyVlessBtn').addEventListener('click', () => copyText(data.vlessLinks.join('\n')));
-            document.getElementById('downloadVlessBtn').addEventListener('click', downloadVless);
+            // 移除downloadVlessBtn事件监听，只保留downloadAllBtn
             document.getElementById('downloadAllBtn').addEventListener('click', downloadAll);
             document.getElementById('downloadSubBtn').addEventListener('click', downloadRemote);
             document.getElementById('mergeBtn').addEventListener('click', mergeAndShow);
@@ -979,31 +1953,194 @@
             document.getElementById('convertToBase64Btn').addEventListener('click', convertManualToBase64);
             document.getElementById('copyManualBase64Btn').addEventListener('click', () => copyText(data.manualBase64Content));
             
-            // 新增的三个上传按钮
-            document.getElementById('uploadLocalBase64Btn').addEventListener('click', uploadLocalBase64);
+            // 新增的四个上传按钮
+            document.getElementById('uploadLocalBase64ToPathBtn').addEventListener('click', uploadLocalBase64ToPath);
             document.getElementById('uploadPlainNodesBtn').addEventListener('click', uploadPlainNodes);
             document.getElementById('uploadMergedBase64Btn').addEventListener('click', uploadMergedBase64);
+            document.getElementById('uploadMergedOptimalBtn').addEventListener('click', uploadMergedOptimal);
+            
+            // 新增：下载路径选择事件
+            document.getElementById('downloadUrlSelect').addEventListener('change', function() {
+                const customInput = document.getElementById('customDownloadUrl');
+                customInput.classList.toggle('show', this.value === 'custom');
+                if (this.value !== 'custom') {
+                    customInput.value = '';
+                }
+            });
+            
+            // 新增：上传路径选择事件
+            document.getElementById('uploadPathSelect').addEventListener('change', function() {
+                const customInput = document.getElementById('customUploadPath');
+                customInput.classList.toggle('show', this.value === 'custom');
+                if (this.value !== 'custom') {
+                    customInput.value = '';
+                }
+            });
+            
+            // 新增：日志控制按钮事件
+            document.getElementById('clearLogBtn').addEventListener('click', clearLog);
+            document.getElementById('toggleLogBtn').addEventListener('click', toggleLog);
 
-            let timer;
+            // 修复：粘贴CSV内容生成节点的功能
+            let csvTimer;
             document.getElementById('csvInput').addEventListener('input', () => {
-                clearTimeout(timer);
-                timer = setTimeout(() => data.currentSource !== 'file' && generateVless(), 1000);
+                clearTimeout(csvTimer);
+                // 当用户停止输入1秒后自动生成
+                csvTimer = setTimeout(() => {
+                    if (data.currentSource !== 'file') {
+                        generateVless();
+                    }
+                }, 1000);
+            });
+            
+            // 修复：当切换到粘贴标签页时，如果已有内容，自动生成
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('card-tab-btn') && e.target.getAttribute('data-tab') === 'paste-tab') {
+                    const csvInput = document.getElementById('csvInput');
+                    if (csvInput.value.trim() && data.currentSource !== 'file') {
+                        generateVless();
+                    }
+                }
+            });
+        }
+
+        // 初始化上传路径选择
+        function initUploadPathSelect() {
+            const uploadPathSelect = document.getElementById('uploadPathSelect');
+            const customUploadPath = document.getElementById('customUploadPath');
+            
+            uploadPathSelect.addEventListener('change', function() {
+                customUploadPath.classList.toggle('show', this.value === 'custom');
+                if (this.value !== 'custom') {
+                    customUploadPath.value = '';
+                }
+            });
+        }
+
+        // 更新CSV输入框状态
+        function updateCSVInputState() {
+            const csvInput = document.getElementById('csvInput');
+            const pasteTabBtn = document.querySelector('.card-tab-btn[data-tab="paste-tab"]');
+            
+            if (data.currentSource === 'file') {
+                // 有文件上传时，禁用粘贴输入框
+                csvInput.disabled = true;
+                csvInput.placeholder = "已上传文件，粘贴功能已禁用。请先移除文件。";
+                pasteTabBtn.style.opacity = "0.6";
+                pasteTabBtn.style.cursor = "not-allowed";
+            } else {
+                // 没有文件上传时，启用粘贴输入框
+                csvInput.disabled = false;
+                csvInput.placeholder = "支持多种格式，智能分割：\n1. 单行或多行格式（冒号,逗号，空格分隔）：\n2. 紧凑格式（一行多个）：\n3. 混合分隔符：\n4. 只有IP（使用默认端口）：";
+                pasteTabBtn.style.opacity = "1";
+                pasteTabBtn.style.cursor = "pointer";
+            }
+        }
+
+        // 初始化标签页 - 修复：确保每个卡片的标签页独立
+        function initTabs() {
+            // 为每个卡片的标签页分别初始化
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const tabButtons = card.querySelectorAll('.card-tab-btn');
+                if (tabButtons.length > 0) {
+                    tabButtons.forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation(); // 阻止事件冒泡
+                            const cardBody = button.closest('.card-body');
+                            const tabId = button.getAttribute('data-tab');
+                            
+                            // 只在当前卡片内部切换
+                            const allTabBtns = cardBody.querySelectorAll('.card-tab-btn');
+                            const allTabContents = cardBody.querySelectorAll('.card-tab-content');
+                            
+                            allTabBtns.forEach(btn => btn.classList.remove('active'));
+                            allTabContents.forEach(content => content.classList.remove('active'));
+                            
+                            button.classList.add('active');
+                            const targetTab = cardBody.querySelector(`#${tabId}`);
+                            if (targetTab) {
+                                targetTab.classList.add('active');
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        // 初始化折叠面板
+        function initAccordion() {
+            const accordionToggle = document.getElementById('advancedConfigToggle');
+            const accordionContent = document.getElementById('advancedConfigContent');
+            
+            accordionToggle.addEventListener('click', () => {
+                accordionToggle.classList.toggle('active');
+                accordionContent.classList.toggle('show');
+            });
+        }
+
+        // 初始化标题显示/隐藏
+        function initHeaderToggle() {
+            const toggleBtn = document.getElementById('toggleHeaderBtn');
+            const headerInfo = document.getElementById('headerInfo');
+            
+            toggleBtn.addEventListener('click', () => {
+                if (headerInfo.classList.contains('hidden')) {
+                    headerInfo.classList.remove('hidden');
+                    toggleBtn.textContent = '隐藏';
+                    showNotification('提示', '标题已显示', 'info');
+                } else {
+                    headerInfo.classList.add('hidden');
+                    toggleBtn.textContent = '显示';
+                    showNotification('提示', '标题已隐藏', 'info');
+                }
             });
         }
 
         function initDragDrop() {
             const area = document.getElementById('dropArea');
-            ['dragenter', 'dragover'].forEach(e => area.addEventListener(e, () => area.classList.add('dragover')));
-            ['dragleave', 'drop'].forEach(e => area.addEventListener(e, () => area.classList.remove('dragover')));
+            
+            // 修复：确保拖拽功能正常工作
+            ['dragenter', 'dragover'].forEach(e => {
+                area.addEventListener(e, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    area.classList.add('dragover');
+                });
+            });
+            
+            ['dragleave', 'drop'].forEach(e => {
+                area.addEventListener(e, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    area.classList.remove('dragover');
+                });
+            });
+            
+            // 修复：正确处理drop事件
             area.addEventListener('drop', e => {
                 e.preventDefault();
-                e.dataTransfer.files[0] && handleFile(e.dataTransfer.files[0]);
+                e.stopPropagation();
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    handleFile(files[0]);
+                }
             });
+            
             area.addEventListener('click', () => document.getElementById('fileInput').click());
         }
 
         function handleFile(file) {
-            if (!/\.(csv|txt)$/i.test(file.name)) return showStatus('请上传CSV或TXT文件', 'error');
+            if (!/\.(csv|txt)$/i.test(file.name)) {
+                showNotification('错误', '请上传CSV或TXT文件', 'error');
+                return;
+            }
+            
+            // 修复：确保文件被正确设置到fileInput元素
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('fileInput').files = dataTransfer.files;
+            
             const reader = new FileReader();
             reader.onload = e => {
                 data.currentSource = 'file';
@@ -1012,7 +2149,17 @@
                 document.getElementById('fileInfo').classList.add('show');
                 document.getElementById('csvInput').value = '';
                 updateSourceBadge();
-                generateVless();
+                // 更新CSV输入框状态
+                updateCSVInputState();
+                
+                // 修复：文件上传后自动生成节点
+                setTimeout(() => {
+                    generateVless();
+                }, 100);
+            };
+            reader.onerror = e => {
+                showNotification('错误', '文件读取失败: ' + e.message, 'error');
+                addLog('文件操作', '文件读取失败: ' + e.message, 'error');
             };
             reader.readAsText(file);
         }
@@ -1021,7 +2168,24 @@
             data.currentSource = 'none';
             document.getElementById('fileInfo').classList.remove('show');
             document.getElementById('fileInput').value = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('fileSize').textContent = '';
             updateSourceBadge();
+            // 更新CSV输入框状态
+            updateCSVInputState();
+            showNotification('信息', '已移除上传的文件', 'info');
+            addLog('文件操作', '已移除上传的文件', 'info');
+            
+            // 清空生成结果
+            data.vlessLinks = [];
+            data.localBase64Content = '';
+            data.autoBase64Content = '';
+            displayVlessLinks();
+            document.getElementById('localBase64Output').textContent = 'Base64订阅内容将在这里显示...';
+            document.getElementById('localBase64Output').classList.add('empty');
+            document.getElementById('autoBase64Output').textContent = '合并去重后将自动生成Base64订阅内容...';
+            document.getElementById('autoBase64Output').classList.add('empty');
+            updateStats();
         }
 
         function updateSourceBadge() {
@@ -1036,12 +2200,21 @@
 
                 let text = '';
                 if (data.currentSource === 'file') {
-                    const file = document.getElementById('fileInput').files[0];
-                    if (!file) return showStatus('请先上传CSV文件', 'error');
+                    const fileInput = document.getElementById('fileInput');
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        showNotification('错误', '请先上传CSV文件', 'error');
+                        showLoading(false);
+                        return;
+                    }
+                    const file = fileInput.files[0];
                     text = await readFile(file);
                 } else {
                     text = document.getElementById('csvInput').value.trim();
-                    if (!text) return showStatus('请提供CSV数据', 'error');
+                    if (!text) {
+                        showNotification('错误', '请提供CSV数据', 'error');
+                        showLoading(false);
+                        return;
+                    }
                 }
 
                 data.vlessLinks = parseAndGenerate(text, config);
@@ -1050,17 +2223,17 @@
                 // 自动生成本地Base64
                 if (data.vlessLinks.length > 0) {
                     data.localBase64Content = btoa(data.vlessLinks.join('\n'));
-                    const localSec = document.getElementById('localBase64Section');
-                    localSec.style.display = 'block';
                     document.getElementById('localBase64Output').textContent = data.localBase64Content;
                     document.getElementById('localBase64Output').classList.remove('empty');
                 }
 
                 displayVlessLinks();
                 updateStats();
-                showStatus(`成功生成 ${data.vlessLinks.length} 个节点，并自动生成Base64订阅`, 'success');
+                showNotification('成功', `成功生成 ${data.vlessLinks.length} 个节点，并自动生成Base64订阅`, 'success');
+                addLog('生成节点', `成功生成 ${data.vlessLinks.length} 个Vless节点`, 'success');
             } catch (e) {
-                showStatus('生成失败: ' + e.message, 'error');
+                showNotification('错误', '生成失败: ' + e.message, 'error');
+                addLog('生成节点', '生成失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
             }
@@ -1082,69 +2255,34 @@
         }
 
         function parseAndGenerate(text, config) {
-            const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+            // 智能分割文本为IP:端口对 - 修复：正确处理多行CSV格式
+            const ipPortPairs = smartSplitIPPort(text);
             const nodes = [];
             let locationCounter = {};
 
-            lines.forEach(line => {
-                let columns = parseCSVLine(line);
-                let ip = '';
-                let port = 443; // 默认443端口
-
-                // 智能提取IP地址
-                if (config.ipColumn >= 0 && columns.length > config.ipColumn) {
-                    const candidate = columns[config.ipColumn].trim();
-                    if (isValidIP(candidate)) ip = candidate;
-                }
-
-                // 如果指定列没有找到IP，遍历所有列寻找IP
-                if (!ip) {
-                    for (let cell of columns) {
-                        const trimmed = cell.trim();
-                        if (isValidIP(trimmed)) {
-                            ip = trimmed;
-                            break;
-                        }
-                    }
-                }
-
+            // 修复：确保不重复生成节点
+            const seenIPs = new Set();
+            
+            ipPortPairs.forEach(pair => {
+                const { ip, port } = pair;
+                
                 if (!ip) return;
-
-                // 智能提取端口
-                let foundPort = false;
-                if (config.portColumn >= 0 && columns.length > config.portColumn) {
-                    const portStr = columns[config.portColumn].trim();
-                    if (portStr && !isNaN(portStr)) {
-                        const p = parseInt(portStr);
-                        if (p >= 1 && p <= 65535) {
-                            port = p;
-                            foundPort = true;
-                        }
-                    }
+                
+                // 修复：检查IP是否已经处理过
+                if (seenIPs.has(ip)) {
+                    console.log(`跳过重复IP: ${ip}`);
+                    return;
                 }
-
-                // 如果指定列没有端口，尝试在其他列中寻找
-                if (!foundPort) {
-                    for (let cell of columns) {
-                        const trimmed = cell.trim();
-                        if (/^\d{1,5}$/.test(trimmed) && !isValidIP(trimmed)) {
-                            const p = parseInt(trimmed);
-                            if (p >= 1 && p <= 65535) {
-                                port = p;
-                                foundPort = true;
-                                break;
-                            }
-                        }
-                    }
-                }
+                seenIPs.add(ip);
 
                 // 强制使用443端口（如果勾选了此选项）
+                let finalPort = port;
                 if (config.force443) {
-                    port = 443;
+                    finalPort = 443;
                 }
                 // 如果没有找到端口，使用443（仅当没有勾选强制443时才会执行到这里）
-                else if (!foundPort) {
-                    port = 443;
+                else if (!finalPort) {
+                    finalPort = 443;
                 }
 
                 let remark = '';
@@ -1158,10 +2296,98 @@
                     remark = `${config.prefix}${String(locationCounter[config.prefix]).padStart(2, '0')}`;
                 }
 
-                nodes.push(generateLink(ip, port, config, remark));
+                nodes.push(generateLink(ip, finalPort, config, remark));
             });
 
             return nodes;
+        }
+
+        // 新增：智能分割IP和端口 - 修复：支持多个空格分隔
+        function smartSplitIPPort(text) {
+            const result = [];
+            const seen = new Set(); // 用于去重
+            
+            // 替换常见分隔符为统一的分隔符，处理多个空格
+            let normalizedText = text.replace(/[,;\s]+/g, ' ');
+            normalizedText = normalizedText.replace(/\s+/g, ' '); // 将多个空格替换为单个空格
+            
+            // 使用正则表达式匹配IP:端口或IP 端口
+            // 匹配格式: IP:端口 或 IP 端口 或 只有IP
+            // 修复：支持IP和端口之间多个空格的情况
+            const ipPortPattern = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?:\s*[:,\s]\s*(\d{1,5}))?/g;
+            
+            let match;
+            while ((match = ipPortPattern.exec(text)) !== null) {
+                const ip = match[1];
+                const port = match[2] ? parseInt(match[2]) : null;
+                
+                // 验证IP有效性
+                if (!isValidIP(ip)) continue;
+                
+                // 验证端口有效性
+                if (port !== null && (port < 1 || port > 65535)) continue;
+                
+                // 去重
+                const key = `${ip}:${port || 'default'}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    result.push({ ip, port });
+                }
+            }
+            
+            // 如果没有匹配到IP:端口格式，尝试其他格式
+            if (result.length === 0) {
+                // 分割文本成单词
+                const words = normalizedText.split(/\s+/).filter(w => w.trim());
+                
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i].trim();
+                    
+                    // 检查是否是IP地址
+                    if (isValidIP(word)) {
+                        const ip = word;
+                        let port = null;
+                        
+                        // 检查下一个单词是否是端口
+                        if (i + 1 < words.length) {
+                            const nextWord = words[i + 1];
+                            const possiblePort = parseInt(nextWord);
+                            if (!isNaN(possiblePort) && possiblePort >= 1 && possiblePort <= 65535) {
+                                port = possiblePort;
+                                i++; // 跳过端口单词
+                            }
+                        }
+                        
+                        // 去重
+                        const key = `${ip}:${port || 'default'}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            result.push({ ip, port });
+                        }
+                    }
+                    // 检查是否是IP:端口格式（已处理过，但这里作为后备）
+                    else if (word.includes(':')) {
+                        const parts = word.split(':');
+                        if (parts.length === 2) {
+                            const ip = parts[0].trim();
+                            const portStr = parts[1].trim();
+                            
+                            if (isValidIP(ip)) {
+                                const port = parseInt(portStr);
+                                if (!isNaN(port) && port >= 1 && port <= 65535) {
+                                    const key = `${ip}:${port}`;
+                                    if (!seen.has(key)) {
+                                        seen.add(key);
+                                        result.push({ ip, port });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return result;
         }
 
         function parseCSVLine(line) {
@@ -1203,14 +2429,21 @@
             el.textContent = data.vlessLinks.length ? data.vlessLinks.join('\n\n') : 'Vless链接将在这里显示...';
             el.classList.toggle('empty', data.vlessLinks.length === 0);
             document.getElementById('resultCount').textContent = `${data.vlessLinks.length}节点`;
+            document.getElementById('localNodeCount').textContent = `${data.vlessLinks.length}节点`;
         }
 
         function convertManualToBase64() {
             const input = document.getElementById('manualVlessInput').value.trim();
-            if (!input) return showStatus('请先粘贴Vless节点', 'error');
+            if (!input) {
+                showNotification('错误', '请先粘贴Vless节点', 'error');
+                return;
+            }
 
             const lines = input.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
-            if (lines.length === 0) return showStatus('未检测到有效vless链接', 'error');
+            if (lines.length === 0) {
+                showNotification('错误', '未检测到有效vless链接', 'error');
+                return;
+            }
 
             const plain = lines.join('\n');
             data.manualBase64Content = btoa(plain);
@@ -1220,58 +2453,106 @@
             document.getElementById('manualBase64Output').textContent = data.manualBase64Content;
             document.getElementById('manualBase64Output').classList.remove('empty');
 
-            showStatus(`成功转换 ${lines.length} 个节点为Base64订阅`, 'success');
+            showNotification('成功', `成功转换 ${lines.length} 个节点为Base64订阅`, 'success');
+            addLog('转换节点', `成功转换 ${lines.length} 个节点为Base64订阅`, 'success');
         }
 
         async function downloadRemote() {
             showLoading(true);
             try {
                 const token = document.getElementById('githubToken').value.trim();
-                if (!token) return showStatus('请先输入GitHub Token', 'error');
+                if (!token) {
+                    showNotification('错误', '请先输入GitHub Token', 'error');
+                    showLoading(false);
+                    return;
+                }
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
+                
+                // 获取选择的下载路径
+                const urlSelect = document.getElementById('downloadUrlSelect');
+                const selectedOption = urlSelect.value;
+                let targetFile = '';
+                
+                if (selectedOption === 'custom') {
+                    targetFile = document.getElementById('customDownloadUrl').value.trim();
+                    if (!targetFile) {
+                        showNotification('错误', '请输入自定义路径', 'error');
+                        showLoading(false);
+                        return;
+                    }
+                } else {
+                    targetFile = selectedOption;
+                }
+                
+                // 根据选择的路径设置要下载的文件
                 const mainNodeFile = document.getElementById('mainNodeFile').value.trim();
                 const plainNodeFile = document.getElementById('plainNodeFile').value.trim();
+                const optimalNodeFile = document.getElementById('optimalNodeFile').value.trim();
+                
+                let downloadFiles = [];
+                
+                if (targetFile === 'MainNode') {
+                    downloadFiles = [{file: mainNodeFile, type: 'base64'}];
+                } else if (targetFile === 'PlainNode') {
+                    downloadFiles = [{file: plainNodeFile, type: 'plain'}];
+                } else if (targetFile === 'OptimalNode') {
+                    downloadFiles = [{file: optimalNodeFile, type: 'base64'}];
+                } else {
+                    // 自定义路径，尝试下载
+                    downloadFiles = [{file: targetFile, type: 'unknown'}];
+                }
 
                 data.remoteNodes = [];
                 
-                // 下载Base64文件（MainNode）
-                try {
-                    const nodeUrl = `https://api.github.com/repos/${repo}/contents/${mainNodeFile}?ref=${branch}`;
-                    const nodeRes = await fetch(nodeUrl, {
-                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-                    });
+                for (const fileInfo of downloadFiles) {
+                    try {
+                        const fileUrl = `https://api.github.com/repos/${repo}/contents/${fileInfo.file}?ref=${branch}`;
+                        const fileRes = await fetch(fileUrl, {
+                            headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                        });
 
-                    if (nodeRes.ok) {
-                        const nodeJson = await nodeRes.json();
-                        const nodeContent = atob(nodeJson.content.replace(/\n/g, ''));
-                        // 解码Base64得到明文节点
-                        const decodedContent = atob(nodeContent);
-                        const nodesFromBase64 = decodedContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
-                        data.remoteNodes = [...data.remoteNodes, ...nodesFromBase64];
-                        data.nodeSha = nodeJson.sha;
+                        if (fileRes.ok) {
+                            const fileJson = await fileRes.json();
+                            const fileContent = atob(fileJson.content.replace(/\n/g, ''));
+                            
+                            let nodes = [];
+                            if (fileInfo.type === 'base64') {
+                                // 解码Base64得到明文节点
+                                try {
+                                    const decodedContent = atob(fileContent);
+                                    nodes = decodedContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
+                                } catch (e) {
+                                    // 如果不是双重Base64，直接解析
+                                    nodes = fileContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
+                                }
+                            } else if (fileInfo.type === 'plain') {
+                                nodes = fileContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
+                            } else {
+                                // 未知类型，尝试两种解析方式
+                                try {
+                                    const decodedContent = atob(fileContent);
+                                    nodes = decodedContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
+                                } catch (e) {
+                                    nodes = fileContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
+                                }
+                            }
+                            
+                            data.remoteNodes = [...data.remoteNodes, ...nodes];
+                            
+                            // 保存sha值
+                            if (fileInfo.file === mainNodeFile) {
+                                data.nodeSha = fileJson.sha;
+                            } else if (fileInfo.file === plainNodeFile) {
+                                data.plainSha = fileJson.sha;
+                            } else if (fileInfo.file === optimalNodeFile) {
+                                data.optimalSha = fileJson.sha;
+                            }
+                        }
+                    } catch (e) {
+                        console.log(`${fileInfo.file} 文件下载失败:`, e);
                     }
-                } catch (e) {
-                    console.log('Base64文件下载失败:', e);
-                }
-
-                // 下载明文文件（PlainNode）
-                try {
-                    const plainUrl = `https://api.github.com/repos/${repo}/contents/${plainNodeFile}?ref=${branch}`;
-                    const plainRes = await fetch(plainUrl, {
-                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-                    });
-
-                    if (plainRes.ok) {
-                        const plainJson = await plainRes.json();
-                        const plainContent = atob(plainJson.content.replace(/\n/g, ''));
-                        const nodesFromPlain = plainContent.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
-                        data.remoteNodes = [...data.remoteNodes, ...nodesFromPlain];
-                        data.plainSha = plainJson.sha;
-                    }
-                } catch (e) {
-                    console.log('明文文件下载失败:', e);
                 }
 
                 // 去重
@@ -1281,7 +2562,7 @@
                     const match = node.match(/@([^:]+):(\d+)/);
                     const key = match ? `${match[1]}:${match[2]}` : node;
                     if (!seen.has(key)) {
-                        seen.add(key);
+                        seen.has(key);
                         uniqueNodes.push(node);
                     }
                 });
@@ -1289,9 +2570,11 @@
                 data.remoteNodes = uniqueNodes;
                 data.stats.remote = data.remoteNodes.length;
                 updateStats();
-                showStatus(`下载完成，远程 ${data.remoteNodes.length} 个节点`, 'success');
+                showNotification('成功', `下载完成，从 ${targetFile} 获取 ${data.remoteNodes.length} 个节点`, 'success');
+                addLog('下载远程', `从 ${targetFile} 获取 ${data.remoteNodes.length} 个节点`, 'success');
             } catch (e) {
-                showStatus('下载失败: ' + e.message, 'error');
+                showNotification('错误', '下载失败: ' + e.message, 'error');
+                addLog('下载远程', '下载失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
             }
@@ -1302,14 +2585,57 @@
             const seen = new Set();
             data.uniqueNodes = [];
 
-            all.forEach(node => {
-                const match = node.match(/@([^:]+):(\d+)/);
-                const key = match ? `${match[1]}:${match[2]}` : node;
+            // 提取所有节点的IP和端口信息
+            const nodeInfos = all.map(node => {
+                const match = node.match(/vless:\/\/[^@]+@([^:]+):(\d+)\?[^#]+#([^"]+)/);
+                if (match) {
+                    return {
+                        ip: match[1],
+                        port: match[2],
+                        remark: decodeURIComponent(match[3]),
+                        full: node
+                    };
+                }
+                return null;
+            }).filter(info => info !== null);
+
+            // 去重：基于IP和端口
+            nodeInfos.forEach(info => {
+                const key = `${info.ip}:${info.port}`;
                 if (!seen.has(key)) {
                     seen.add(key);
-                    data.uniqueNodes.push(node);
+                    data.uniqueNodes.push(info);
                 }
             });
+
+            // 检查是否需要重新设置别名
+            const shouldRename = document.getElementById('renameOnMerge').checked;
+            
+            if (shouldRename && data.uniqueNodes.length > 0) {
+                // 重新设置所有节点别名
+                const locationCounter = {};
+                
+                data.uniqueNodes = data.uniqueNodes.map((nodeInfo, index) => {
+                    const config = getConfig();
+                    let remark = '';
+                    
+                    if (config.autoLoc) {
+                        const loc = getLocation(nodeInfo.ip);
+                        const key = loc !== '未知' ? loc : config.prefix;
+                        locationCounter[key] = (locationCounter[key] || 0) + 1;
+                        remark = `${key}${String(locationCounter[key]).padStart(2, '0')}`;
+                    } else {
+                        locationCounter[config.prefix] = (locationCounter[config.prefix] || 0) + 1;
+                        remark = `${config.prefix}${String(locationCounter[config.prefix]).padStart(2, '0')}`;
+                    }
+                    
+                    // 重新生成节点链接
+                    return generateLink(nodeInfo.ip, nodeInfo.port, config, remark);
+                });
+            } else {
+                // 保持原有别名
+                data.uniqueNodes = data.uniqueNodes.map(info => info.full);
+            }
 
             data.stats.merged = all.length;
             data.stats.unique = data.uniqueNodes.length;
@@ -1318,23 +2644,26 @@
             const plainText = data.uniqueNodes.join('\n');
             data.autoBase64Content = btoa(plainText);
 
-            const autoSec = document.getElementById('autoBase64Section');
-            autoSec.style.display = 'block';
             document.getElementById('autoBase64Output').textContent = data.autoBase64Content;
             document.getElementById('autoBase64Output').classList.remove('empty');
-
-            const mergedSec = document.getElementById('mergedSection');
-            mergedSec.style.display = 'block';
             document.getElementById('mergedResult').textContent = data.uniqueNodes.length ? data.uniqueNodes.join('\n\n') : '无节点';
-            autoSec.scrollIntoView({ behavior: 'smooth' });
+            
+            // 显示重新设置别名的提示
+            if (shouldRename) {
+                showNotification('成功', `合并完成！已重新设置所有 ${data.uniqueNodes.length} 个节点的别名`, 'success');
+                addLog('合并节点', `合并完成！重新设置 ${data.uniqueNodes.length} 个节点的别名`, 'success');
+            } else {
+                showNotification('成功', `合并完成！共 ${data.uniqueNodes.length} 个节点（保持原有别名）`, 'success');
+                addLog('合并节点', `合并完成！共 ${data.uniqueNodes.length} 个节点`, 'success');
+            }
         }
 
-        // 新增：上传本地生成Base64到LocationNode
-        async function uploadLocalBase64() {
+        // 新增：上传本地生成Base64到指定路径
+        async function uploadLocalBase64ToPath() {
             showLoading(true);
             try {
                 if (!data.localBase64Content) {
-                    showStatus('请先生成本地Base64内容', 'error');
+                    showNotification('错误', '请先生成本地Base64内容', 'error');
                     showLoading(false);
                     return;
                 }
@@ -1344,32 +2673,73 @@
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
-                const locationNodeFile = document.getElementById('locationNodeFile').value.trim();
+                
+                // 获取选择的上传路径
+                const pathSelect = document.getElementById('uploadPathSelect');
+                const selectedOption = pathSelect.value;
+                let targetFile = '';
+                
+                if (selectedOption === 'custom') {
+                    targetFile = document.getElementById('customUploadPath').value.trim();
+                    if (!targetFile) {
+                        showNotification('错误', '请输入自定义上传路径', 'error');
+                        showLoading(false);
+                        return;
+                    }
+                } else {
+                    targetFile = selectedOption;
+                }
 
                 // 检查文件是否存在，获取sha
-                let newSha = null;
+                let fileSha = null;
                 try {
-                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${locationNodeFile}?ref=${branch}`;
+                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${targetFile}?ref=${branch}`;
                     const checkRes = await fetch(checkUrl, {
                         headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
                     });
                     if (checkRes.ok) {
                         const json = await checkRes.json();
-                        newSha = json.sha;
+                        fileSha = json.sha;
                     }
                 } catch (e) {
                     console.log('文件不存在，将创建新文件');
                 }
+                /* ========= 新增：PlainNode 模式处理 ========= */
+                let rawContent = data.localBase64Content;      // 默认仍当作 base64 字符串
+                if (targetFile === 'PlainNode') {
+                    try {
+                        // 1. base64 → 明文
+                        const plainText = atob(data.localBase64Content);
+                        // 2. 只保留 vless 行（想去掉注释/空行就保留这步）
+                        const vlessLines = plainText
+                            .split(/\r?\n/)
+                            .filter(l => l.startsWith('vless://'))
+                            .join('\n');
+                        if (!vlessLines) throw new Error('解码后未找到任何 vless 节点');
+                        // 3. 明文 → 重新 base64（GitHub API 要求 content 字段是 base64）
+                        rawContent = btoa(vlessLines);
+                    } catch (e) {
+                        throw new Error('Base64 解码失败或内容非预期格式: ' + e.message);
+                    }
+                }
+                /* ============================================ */
 
+                // 组装请求体（与原来一致，只是 content 换成 rawContent）
                 const body = {
                     message: `上传本地生成Base64订阅 - ${new Date().toLocaleString()} (${data.vlessLinks.length}节点)`,
-                    // content: data.localBase64Content,
-                    content: btoa(data.localBase64Content),
+                    content: rawContent,   // ← 这里可能是“二次 base64 后的明文”也可能是原始 base64
                     branch
                 };
-                if (newSha) body.sha = newSha;
+                if (fileSha) body.sha = fileSha;
 
-                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${locationNodeFile}`, {
+                // const body = {
+                //     message: `上传本地生成Base64订阅 - ${new Date().toLocaleString()} (${data.vlessLinks.length}节点)`,
+                //     content: btoa(data.localBase64Content),
+                //     branch
+                // };
+                // if (fileSha) body.sha = fileSha;
+
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${targetFile}`, {
                     method: 'PUT',
                     headers: {
                         Authorization: `token ${token}`,
@@ -1384,22 +2754,22 @@
                     throw new Error(err.message || `上传失败 ${res.status}`);
                 }
 
-                const [user, repoName] = repo.split('/');
-                showStatus(`本地生成Base64已上传到 ${locationNodeFile}！${data.vlessLinks.length}个节点`, 'success');
-                showStatus(`访问地址：https://${user.toLowerCase()}.github.io/${repoName}/${locationNodeFile}`, 'info');
+                showNotification('成功', `本地生成Base64已上传到 ${targetFile}！${data.vlessLinks.length}个节点`, 'success');
+                addLog('上传本地Base64', `本地Base64已上传到 ${targetFile} (${data.vlessLinks.length}节点)`, 'success');
             } catch (e) {
-                showStatus('上传失败: ' + e.message, 'error');
+                showNotification('错误', '上传失败: ' + e.message, 'error');
+                addLog('上传本地Base64', '上传失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
             }
         }
 
-        // 新增：上传明文节点到PlainNode
+        // 修复：上传明文节点到PlainNode
         async function uploadPlainNodes() {
             showLoading(true);
             try {
                 if (data.uniqueNodes.length === 0) {
-                    showStatus('请先合并节点', 'error');
+                    showNotification('错误', '请先合并节点', 'error');
                     showLoading(false);
                     return;
                 }
@@ -1412,13 +2782,38 @@
                 const plainNodeFile = document.getElementById('plainNodeFile').value.trim();
                 const plainText = data.uniqueNodes.join('\n');
 
+                // 检查文件是否存在，获取正确的sha值
+                let fileSha = null;
+                try {
+                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${plainNodeFile}?ref=${branch}`;
+                    const checkRes = await fetch(checkUrl, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (checkRes.ok) {
+                        const json = await checkRes.json();
+                        fileSha = json.sha;
+                    } else if (checkRes.status === 404) {
+                        // 文件不存在，将创建新文件
+                        console.log('PlainNode文件不存在，将创建新文件');
+                    } else {
+                        const err = await checkRes.json();
+                        throw new Error(`检查文件失败: ${err.message}`);
+                    }
+                } catch (e) {
+                    console.log('检查文件时出错:', e);
+                    // 继续尝试上传，如果文件不存在会创建新文件
+                }
+
                 const body = {
                     message: `上传明文节点 - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
-                    // content: btoa(plainText)
-                    content: btoa(btoa(plainText)),  // 双重Base64编码
+                    content: btoa(plainText),
                     branch
                 };
-                if (data.plainSha) body.sha = data.plainSha;
+                
+                // 只有当文件已存在时才添加sha参数
+                if (fileSha) {
+                    body.sha = fileSha;
+                }
 
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/${plainNodeFile}`, {
                     method: 'PUT',
@@ -1436,21 +2831,22 @@
                 }
 
                 const [user, repoName] = repo.split('/');
-                showStatus(`明文节点已上传到 ${plainNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
-                showStatus(`访问地址：https://${user.toLowerCase()}.github.io/${repoName}/${plainNodeFile}`, 'info');
+                showNotification('成功', `明文节点已上传到 ${plainNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
+                addLog('上传明文节点', `明文节点已上传到 ${plainNodeFile} (${data.uniqueNodes.length}节点)`, 'success');
             } catch (e) {
-                showStatus('上传失败: ' + e.message, 'error');
+                showNotification('错误', '上传失败: ' + e.message, 'error');
+                addLog('上传明文节点', '上传失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
             }
         }
 
-        // 新增：上传合并Base64到MainNode
+        // 修复：上传合并Base64到MainNode
         async function uploadMergedBase64() {
             showLoading(true);
             try {
                 if (data.uniqueNodes.length === 0) {
-                    showStatus('请先合并节点', 'error');
+                    showNotification('错误', '请先合并节点', 'error');
                     showLoading(false);
                     return;
                 }
@@ -1464,12 +2860,38 @@
                 const plainText = data.uniqueNodes.join('\n');
                 const base64Content = btoa(plainText);
 
+                // 检查文件是否存在，获取正确的sha值
+                let fileSha = null;
+                try {
+                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${mainNodeFile}?ref=${branch}`;
+                    const checkRes = await fetch(checkUrl, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (checkRes.ok) {
+                        const json = await checkRes.json();
+                        fileSha = json.sha;
+                    } else if (checkRes.status === 404) {
+                        // 文件不存在，将创建新文件
+                        console.log('MainNode文件不存在，将创建新文件');
+                    } else {
+                        const err = await checkRes.json();
+                        throw new Error(`检查文件失败: ${err.message}`);
+                    }
+                } catch (e) {
+                    console.log('检查文件时出错:', e);
+                    // 继续尝试上传，如果文件不存在会创建新文件
+                }
+
                 const body = {
                     message: `合并Base64订阅并上传 - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
                     content: btoa(base64Content), // 双重Base64编码
                     branch
                 };
-                if (data.nodeSha) body.sha = data.nodeSha;
+                
+                // 只有当文件已存在时才添加sha参数
+                if (fileSha) {
+                    body.sha = fileSha;
+                }
 
                 const res = await fetch(`https://api.github.com/repos/${repo}/contents/${mainNodeFile}`, {
                     method: 'PUT',
@@ -1487,14 +2909,94 @@
                 }
 
                 const [user, repoName] = repo.split('/');
-                showStatus(`合并Base64订阅已上传到 ${mainNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
-                showStatus(`订阅地址：https://${user.toLowerCase()}.github.io/${repoName}/${mainNodeFile}`, 'info');
+                showNotification('成功', `合并Base64订阅已上传到 ${mainNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
+                addLog('上传合并Base64', `合并Base64已上传到 ${mainNodeFile} (${data.uniqueNodes.length}节点)`, 'success');
             } catch (e) {
-                showStatus('上传失败: ' + e.message, 'error');
+                showNotification('错误', '上传失败: ' + e.message, 'error');
+                addLog('上传合并Base64', '上传失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
             }
         }
+        
+        // 新增：上传合并订阅到OptimalNode
+        async function uploadMergedOptimal() {
+            showLoading(true);
+            try {
+                if (data.uniqueNodes.length === 0) {
+                    showNotification('错误', '请先合并节点', 'error');
+                    showLoading(false);
+                    return;
+                }
+
+                const token = document.getElementById('githubToken').value.trim();
+                if (!token) throw new Error('缺少GitHub Token');
+
+                const repo = document.getElementById('githubRepo').value.trim();
+                const branch = document.getElementById('githubBranch').value.trim() || 'main';
+                const optimalNodeFile = document.getElementById('optimalNodeFile').value.trim();
+                const plainText = data.uniqueNodes.join('\n');
+                const base64Content = btoa(plainText);
+
+                // 检查文件是否存在，获取正确的sha值
+                let fileSha = null;
+                try {
+                    const checkUrl = `https://api.github.com/repos/${repo}/contents/${optimalNodeFile}?ref=${branch}`;
+                    const checkRes = await fetch(checkUrl, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (checkRes.ok) {
+                        const json = await checkRes.json();
+                        fileSha = json.sha;
+                    } else if (checkRes.status === 404) {
+                        // 文件不存在，将创建新文件
+                        console.log('OptimalNode文件不存在，将创建新文件');
+                    } else {
+                        const err = await checkRes.json();
+                        throw new Error(`检查文件失败: ${err.message}`);
+                    }
+                } catch (e) {
+                    console.log('检查文件时出错:', e);
+                    // 继续尝试上传，如果文件不存在会创建新文件
+                }
+
+                const body = {
+                    message: `上传合并订阅到OptimalNode - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
+                    content: btoa(base64Content), // 双重Base64编码
+                    branch
+                };
+                
+                // 只有当文件已存在时才添加sha参数
+                if (fileSha) {
+                    body.sha = fileSha;
+                }
+
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/${optimalNodeFile}`, {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `token ${token}`,
+                        Accept: 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.message || `上传失败 ${res.status}`);
+                }
+
+                const [user, repoName] = repo.split('/');
+                showNotification('成功', `合并订阅已上传到 ${optimalNodeFile}！${data.uniqueNodes.length}个节点`, 'success');
+                addLog('上传合并至Optimal', `合并订阅已上传到 ${optimalNodeFile} (${data.uniqueNodes.length}节点)`, 'success');
+            } catch (e) {
+                showNotification('错误', '上传失败: ' + e.message, 'error');
+                addLog('上传合并至Optimal', '上传失败: ' + e.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
         //一键同步(远端明文和本地明文)和(远端Base64和本地Base64)方法
         async function oneClickSync() {
             showLoading(true);
@@ -1521,8 +3023,24 @@
                 const branch = document.getElementById('githubBranch').value.trim() || 'main';
                 const mainNodeFile = document.getElementById('mainNodeFile').value.trim();
                 const plainNodeFile = document.getElementById('plainNodeFile').value.trim();
+                const optimalNodeFile = document.getElementById('optimalNodeFile').value.trim();
                 const plainText = data.uniqueNodes.join('\n');
                 const base64Content = btoa(plainText);
+
+                // 首先检查MainNode文件是否存在，获取sha
+                let nodeFileSha = null;
+                try {
+                    const checkNodeUrl = `https://api.github.com/repos/${repo}/contents/${mainNodeFile}?ref=${branch}`;
+                    const checkNodeRes = await fetch(checkNodeUrl, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (checkNodeRes.ok) {
+                        const nodeJson = await checkNodeRes.json();
+                        nodeFileSha = nodeJson.sha;
+                    }
+                } catch (e) {
+                    console.log('MainNode文件不存在或检查失败:', e);
+                }
 
                 // 上传Base64订阅文件（MainNode）- 双重Base64编码
                 const nodeBody = {
@@ -1530,7 +3048,7 @@
                     content: btoa(base64Content), // 双重Base64编码
                     branch
                 };
-                if (data.nodeSha) nodeBody.sha = data.nodeSha;
+                if (nodeFileSha) nodeBody.sha = nodeFileSha;
 
                 const nodeRes = await fetch(`https://api.github.com/repos/${repo}/contents/${mainNodeFile}`, {
                     method: 'PUT',
@@ -1547,13 +3065,28 @@
                     throw new Error(`Base64上传失败: ${err.message || nodeRes.status}`);
                 }
 
+                // 检查PlainNode文件是否存在，获取sha
+                let plainFileSha = null;
+                try {
+                    const checkPlainUrl = `https://api.github.com/repos/${repo}/contents/${plainNodeFile}?ref=${branch}`;
+                    const checkPlainRes = await fetch(checkPlainUrl, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (checkPlainRes.ok) {
+                        const plainJson = await checkPlainRes.json();
+                        plainFileSha = plainJson.sha;
+                    }
+                } catch (e) {
+                    console.log('PlainNode文件不存在或检查失败:', e);
+                }
+
                 // 上传明文文件（PlainNode）
                 const plainBody = {
                     message: `自动同步明文节点 - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
                     content: btoa(plainText),
                     branch
                 };
-                if (data.plainSha) plainBody.sha = data.plainSha;
+                if (plainFileSha) plainBody.sha = plainFileSha;
 
                 const plainRes = await fetch(`https://api.github.com/repos/${repo}/contents/${plainNodeFile}`, {
                     method: 'PUT',
@@ -1569,15 +3102,179 @@
                     console.warn(`明文文件上传失败，但Base64已成功上传`);
                 }
 
+                // 6. 新增：上传合并订阅到OptimalNode
+                let optimalFileSha = null;
+                try {
+                    const checkOptimalUrl = `https://api.github.com/repos/${repo}/contents/${optimalNodeFile}?ref=${branch}`;
+                    const checkOptimalRes = await fetch(checkOptimalUrl, {
+                        headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+                    });
+                    if (checkOptimalRes.ok) {
+                        const optimalJson = await checkOptimalRes.json();
+                        optimalFileSha = optimalJson.sha;
+                    }
+                } catch (e) {
+                    console.log('OptimalNode文件不存在或检查失败:', e);
+                }
+
+                // 上传合并订阅到OptimalNode（双重Base64编码）
+                const optimalBody = {
+                    message: `自动同步合并订阅到OptimalNode - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`,
+                    content: btoa(base64Content), // 双重Base64编码
+                    branch
+                };
+                if (optimalFileSha) optimalBody.sha = optimalFileSha;
+
+                const optimalRes = await fetch(`https://api.github.com/repos/${repo}/contents/${optimalNodeFile}`, {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `token ${token}`,
+                        Accept: 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(optimalBody)
+                });
+
+                if (!optimalRes.ok) {
+                    console.warn(`OptimalNode文件上传失败，但其他文件已成功上传`);
+                }
+
                 const [user, repoName] = repo.split('/');
-                showStatus(`一键同步成功！${data.uniqueNodes.length}个节点已上传`, 'success');
-                showStatus(`Base64订阅：https://${user.toLowerCase()}.github.io/${repoName}/${mainNodeFile}`, 'info');
-                showStatus(`明文节点：https://${user.toLowerCase()}.github.io/${repoName}/${plainNodeFile}`, 'info');
-                showStatus(`本地生成Base64：https://${user.toLowerCase()}.github.io/${repoName}/LocationNode`, 'info');
+                showNotification('成功', `一键同步成功！${data.uniqueNodes.length}个节点已上传到三个文件`, 'success');
+                addLog('一键同步', `成功同步 ${data.uniqueNodes.length} 个节点到GitHub三个文件`, 'success');
             } catch (e) {
-                showStatus('一键同步失败: ' + e.message, 'error');
+                showNotification('错误', '一键同步失败: ' + e.message, 'error');
+                addLog('一键同步', '同步失败: ' + e.message, 'error');
             } finally {
                 showLoading(false);
+            }
+        }
+
+        // 新增：全局通知函数
+        function showNotification(title, message, type = 'info') {
+            const notificationId = 'notification-' + Date.now();
+            const notificationContainer = document.getElementById('notificationContainer');
+            
+            // 限制通知数量
+            if (notifications.active.length >= notifications.maxNotifications) {
+                const oldestNotification = document.getElementById(notifications.active[0]);
+                if (oldestNotification) {
+                    oldestNotification.remove();
+                    notifications.active.shift();
+                }
+            }
+            
+            const notification = document.createElement('div');
+            notification.id = notificationId;
+            notification.className = `notification ${type}`;
+            
+            const time = new Date().toLocaleTimeString();
+            
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-time">${time}</div>
+                    <button class="notification-close" onclick="closeNotification('${notificationId}')">&times;</button>
+                </div>
+                <div class="notification-message">${message}</div>
+            `;
+            
+            notificationContainer.appendChild(notification);
+            notifications.active.push(notificationId);
+            
+            // 自动关闭通知（错误通知不自动关闭）
+            if (type !== 'error') {
+                setTimeout(() => {
+                    closeNotification(notificationId);
+                }, 8000);
+            }
+        }
+        
+        // 新增：关闭通知函数
+        function closeNotification(id) {
+            const notification = document.getElementById(id);
+            if (notification) {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    notification.remove();
+                    const index = notifications.active.indexOf(id);
+                    if (index > -1) {
+                        notifications.active.splice(index, 1);
+                    }
+                }, 300);
+            }
+        }
+        
+        // 新增：添加日志函数
+        function addLog(action, message, level = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const logEntry = {
+                time,
+                action,
+                message,
+                level,
+                timestamp: Date.now()
+            };
+            
+            logData.entries.unshift(logEntry);
+            
+            // 限制日志条目数量
+            if (logData.entries.length > logData.maxEntries) {
+                logData.entries.pop();
+            }
+            
+            updateLogDisplay();
+        }
+        
+        // 新增：更新日志显示
+        function updateLogDisplay() {
+            const logContent = document.getElementById('logContent');
+            logContent.innerHTML = '';
+            
+            logData.entries.forEach(entry => {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                
+                const levelClass = {
+                    'info': 'info',
+                    'success': 'success',
+                    'error': 'error'
+                }[entry.level] || 'info';
+                
+                logEntry.innerHTML = `
+                    <span class="log-time">[${entry.time}]</span>
+                    <span class="log-level ${levelClass}">${levelClass}</span>
+                    <span class="log-message">${entry.action}: ${entry.message}</span>
+                `;
+                
+                logContent.appendChild(logEntry);
+            });
+            
+            // 自动显示日志区域
+            const logSection = document.getElementById('logSection');
+            if (logData.entries.length > 1) { // 不止有启动日志
+                logSection.classList.add('show');
+            }
+        }
+        
+        // 新增：清空日志
+        function clearLog() {
+            logData.entries = [];
+            updateLogDisplay();
+            showNotification('信息', '日志已清空', 'info');
+        }
+        
+        // 新增：切换日志显示
+        function toggleLog() {
+            const logSection = document.getElementById('logSection');
+            const toggleBtn = document.getElementById('toggleLogBtn');
+            
+            if (logSection.classList.contains('show')) {
+                logSection.classList.remove('show');
+                toggleBtn.innerHTML = '<span>📋</span> 收起日志';
+            } else {
+                logSection.classList.add('show');
+                toggleBtn.innerHTML = '<span>📋</span> 收起日志';
             }
         }
 
@@ -1594,35 +3291,35 @@
             document.getElementById('remoteNodes').textContent = s.remote;
             document.getElementById('mergedNodes').textContent = s.merged;
             document.getElementById('uniqueNodes').textContent = s.unique;
+            document.getElementById('syncNodeCount').textContent = `${s.unique}节点`;
         }
 
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
 
-        function showStatus(msg, type = 'info') {
-            const el = document.getElementById('status');
-            el.textContent = msg;
-            el.className = `status-message status-${type}`;
-            el.style.display = 'block';
-            if (type !== 'error') setTimeout(() => el.style.display = 'none', 8000);
-        }
-
         function copyText(text) {
-            if (!text) return showStatus('无内容可复制', 'error');
-            navigator.clipboard.writeText(text).then(() => showStatus('已复制到剪贴板', 'success'));
+            if (!text) {
+                showNotification('错误', '无内容可复制', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('成功', '已复制到剪贴板', 'success');
+                addLog('复制操作', '内容已复制到剪贴板', 'success');
+            });
         }
 
-        function downloadVless() {
-            if (!data.vlessLinks.length) return showStatus('请先生成节点', 'error');
-            downloadBlob(data.vlessLinks.join('\n'), 'vless.txt');
-        }
-
+        // 移除downloadVless函数，只保留downloadAll函数
         function downloadAll() {
-            if (!data.vlessLinks.length) return showStatus('请先生成节点', 'error');
+            if (!data.vlessLinks.length) {
+                showNotification('错误', '请先生成节点', 'error');
+                return;
+            }
             const t = new Date().toISOString().slice(0,19).replace(/:/g,'-');
             downloadBlob(data.vlessLinks.join('\n'), `vless_${t}.txt`);
             downloadBlob(data.localBase64Content || btoa(data.vlessLinks.join('\n')), `subscription_${t}.txt`);
+            showNotification('成功', '已下载Vless链接和订阅文件', 'success');
+            addLog('下载', '已下载Vless链接和订阅文件', 'success');
         }
 
         function downloadBlob(content, name) {
@@ -1655,7 +3352,6 @@
             return /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ip) && ip.split('.').every(n => n >= 0 && n <= 255);
         }
 
-        
                 /**
         * 根据IP地址判断所属国家/地区（最终实用版）
         * 专注于核心国家准确性，简化地区判断
@@ -1872,107 +3568,6 @@
             
             return '未知';
         }
-
-        // 测试函数（针对实际需求）
-        function testFinalPracticalLocation() {
-            console.log('最终实用版IP归属地测试:');
-            console.log('====================');
-            
-            // 实际常用的IP测试
-            const testIPs = [
-                // 私有地址
-                {ip: '192.168.1.1', expected: '内部网络'},
-                {ip: '10.0.0.1', expected: '内部网络'},
-                {ip: '172.16.0.1', expected: '内部网络'},
-                
-                // 知名公共DNS
-                {ip: '8.8.8.8', expected: '美国'},
-                {ip: '1.1.1.1', expected: '美国'},
-                {ip: '9.9.9.9', expected: '美国'},
-                {ip: '208.67.222.222', expected: '美国'},
-                
-                // 中国主要DNS和服务
-                {ip: '114.114.114.114', expected: '中国'},
-                {ip: '223.5.5.5', expected: '中国'},
-                {ip: '119.29.29.29', expected: '中国'},
-                {ip: '180.76.76.76', expected: '中国'},
-                {ip: '123.125.81.6', expected: '中国'},
-                {ip: '220.181.38.148', expected: '中国'},
-                {ip: '61.135.169.121', expected: '中国'},
-                {ip: '202.108.22.5', expected: '中国'},
-                
-                // 亚洲其他国家和地区
-                {ip: '61.231.1.1', expected: '日本'},
-                {ip: '61.233.1.1', expected: '韩国'},
-                {ip: '61.235.1.1', expected: '香港'},
-                {ip: '61.234.1.1', expected: '新加坡'},
-                {ip: '61.236.1.1', expected: '台湾'},
-                {ip: '61.238.1.1', expected: '马来西亚'},
-                {ip: '61.240.1.1', expected: '印度尼西亚'},
-                {ip: '61.242.1.1', expected: '泰国'},
-                {ip: '61.244.1.1', expected: '菲律宾'},
-                {ip: '61.246.1.1', expected: '越南'},
-                
-                // 特殊网段
-                {ip: '203.119.4.10', expected: '越南'},
-                {ip: '202.44.135.10', expected: '泰国'},
-                {ip: '202.55.124.10', expected: '新加坡'},
-                {ip: '165.246.1.1', expected: '韩国'},
-                {ip: '202.12.27.33', expected: '日本'},
-                
-                // 地区范围示例
-                {ip: '78.128.0.1', expected: '欧洲地区'},
-                {ip: '120.0.0.1', expected: '中国'}, // 实际是中国的IP段
-                {ip: '95.0.0.1', expected: '欧洲地区'},
-                {ip: '177.0.0.1', expected: '南美地区'},
-                {ip: '41.0.0.1', expected: '非洲地区'},
-                {ip: '42.0.0.1', expected: '澳大利亚'}, // 澳大利亚IP段
-                
-                // 101.226.4.6 这个IP需要特别处理
-                {ip: '101.226.4.6', expected: '中国'}
-            ];
-            
-            let passed = 0;
-            testIPs.forEach(test => {
-                const result = getLocation(test.ip);
-                const status = result === test.expected ? '✓' : '✗';
-                if (status === '✓') passed++;
-                console.log(`${status} ${test.ip.padEnd(15)} => ${result.padEnd(12)} (期望: ${test.expected})`);
-            });
-            
-            console.log(`\n测试结果: ${passed}/${testIPs.length} 通过 (${Math.round(passed/testIPs.length*100)}%)`);
-            
-            const failed = testIPs.filter(test => getLocation(test.ip) !== test.expected);
-            if (failed.length > 0) {
-                console.log('\n失败的测试用例:');
-                failed.forEach(test => {
-                    console.log(`  ${test.ip} => ${getLocation(test.ip)} (期望: ${test.expected})`);
-                });
-            }
-            
-            return passed;
-        }
-
-        // 快速查询示例
-        function quickLookup() {
-            console.log('\n快速查询示例:');
-            console.log('============');
-            
-            const sampleIPs = [
-                '192.168.0.1',
-                '8.8.8.8',
-                '114.114.114.114',
-                '61.235.1.1',
-                '203.119.4.10',
-                '78.128.0.1',
-                '42.0.0.1'
-            ];
-            
-            sampleIPs.forEach(ip => {
-                console.log(`${ip.padEnd(15)} => ${getLocation(ip)}`);
-            });
-        }
-
 
     </script>
 </body>
