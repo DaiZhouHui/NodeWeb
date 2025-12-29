@@ -3921,12 +3921,11 @@
                 setTimeout(() => {
                     closeNotification(notificationId);
                 }, timeoutDuration);
+            }else{
+                setTimeout(() => {
+                    closeNotification(notificationId);
+                }, 20000);警告通知显示20秒
             }
-            // if (type !== 'error') {
-            //     setTimeout(() => {
-            //         closeNotification(notificationId);
-            //     }, 8000);
-            // }
         }
 
         // 新增：关闭通知函数
