@@ -3185,7 +3185,7 @@
                 case 'uploadLocalBase64ToPath':
                     nodeCount = data.vlessLinks.length;
                     if (nodeCount === 0) {
-                        showNotification('上传失败', '请先生成本地节点，当前没有可上传的节点数据', 'error');
+                        showNotification('上传失败', '请先生成本地节点，当前没有可上传的节点数据', 'warning');
                         return;
                     }
                     const uploadPathSelect = document.getElementById('uploadPathSelect');
@@ -3207,7 +3207,7 @@
                 case 'uploadPlainNodes':
                     nodeCount = data.uniqueNodes.length;
                     if (nodeCount === 0) {
-                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
+                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'warning');
                         return;
                     }
                     targetPath = document.getElementById('plainNodeFile').value.trim();
@@ -3218,7 +3218,7 @@
                 case 'uploadMergedBase64':
                     nodeCount = data.uniqueNodes.length;
                     if (nodeCount === 0) {
-                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
+                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'warning');
                         return;
                     }
                     targetPath = document.getElementById('mainNodeFile').value.trim();
@@ -3229,7 +3229,7 @@
                 case 'uploadMergedOptimal':
                     nodeCount = data.uniqueNodes.length;
                     if (nodeCount === 0) {
-                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
+                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'warning');
                         return;
                     }
                     targetPath = document.getElementById('optimalNodeFile').value.trim();
@@ -3240,7 +3240,7 @@
                 case 'uploadMergedToPath':
                     nodeCount = data.uniqueNodes.length;
                     if (nodeCount === 0) {
-                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
+                        showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'warning');
                         return;
                     }
                     const pathSelect = document.getElementById('uploadPathSelect');
@@ -3261,7 +3261,7 @@
             }
 
             if (nodeCount === 0) {
-                showNotification('上传失败', '没有可上传的节点数据', 'error');
+                showNotification('上传失败', '没有可上传的节点数据', 'warning');
                 return;
             }
 
@@ -3911,9 +3911,9 @@
 
                 // 根据类型设置不同时间
                 if (type === 'success') {
-                    timeoutDuration = 4000; // 成功通知显示4秒
+                    timeoutDuration = 3000; // 成功通知显示3秒
                 } else if (type === 'info') {
-                    timeoutDuration = 3000; // 信息通知显示3秒
+                    timeoutDuration = 4000; // 信息通知显示4秒
                 } else if (type === 'warning') {
                     timeoutDuration = 6000; // 警告通知显示6秒
                 }
@@ -3924,7 +3924,7 @@
             }else{
                 setTimeout(() => {
                     closeNotification(notificationId);
-                }, 20000);警告通知显示20秒
+                }, 20000);错误通知显示20秒
             }
         }
 
