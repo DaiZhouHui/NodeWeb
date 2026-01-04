@@ -640,116 +640,6 @@
             font-size: 16px;
         }
 
-        /* GitHub.io链接显示区域 */
-        .github-links-section {
-            margin-top: 20px;
-            padding: 16px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-        }
-
-        .github-links-section h3 {
-            margin: 0 0 16px 0;
-            color: #495057;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .github-links-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .github-link-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .link-label {
-            font-weight: 600;
-            color: #495057;
-            font-size: 0.9rem;
-        }
-
-        .link-content {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .link-input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            background: white;
-            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            color: #495057;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-
-        /* 代理工具网格样式 */
-        .proxy-tools-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-
-        .proxy-tool-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-            transition: var(--transition);
-        }
-
-        .proxy-tool-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .tool-icon {
-            font-size: 2rem;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .tool-info {
-            flex: 1;
-        }
-
-        .tool-info h4 {
-            margin: 0 0 4px 0;
-            color: #495057;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .tool-info p {
-            margin: 0;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
         /* 页脚 */
         .footer {
             text-align: center;
@@ -774,28 +664,6 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 14px;
-        }
-
-        /* 按钮加载状态 */
-        .btn-loading {
-            position: relative;
-            pointer-events: none;
-            padding-left: 42px !important; /* 为spinner留出空间 */
-        }
-
-        .btn-loading::before {
-            content: '';
-            position: absolute;
-            left: 11px; /* 居中在左侧空间 */
-            top: 50%;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            transform: translateY(-50%);
-            z-index: 1;
         }
 
         @keyframes spin {
@@ -2141,7 +2009,6 @@
                         <button class="card-tab-btn" data-tab="local-base64-tab">本地Base64</button>
                         <button class="card-tab-btn" data-tab="merged-tab">合并Vless</button>
                         <button class="card-tab-btn" data-tab="auto-base64-tab">合并Base64</button>
-                        <button class="card-tab-btn" data-tab="proxy-tools-tab">代理工具</button>
                     </div>
 
                     <!-- Vless链接标签页 -->
@@ -2203,28 +2070,6 @@
                         </div>
                         <div class="result-box">
                             <div id="autoBase64Output" class="result-content empty">合并去重后将自动生成Base64订阅内容...</div>
-                        </div>
-                    </div>
-
-                    <!-- 代理工具标签页 -->
-                    <div class="card-tab-content" id="proxy-tools-tab">
-                        <div class="result-header">
-                            <h3>🔧 代理工具配置文件下载</h3>
-                        </div>
-                        <div class="proxy-tools-grid">
-                            <div class="proxy-tool-item">
-                                <div class="tool-icon">⚡</div>
-                                <div class="tool-info">
-                                    <h4>Clash</h4>
-                                    <p>YAML配置文件</p>
-                                </div>
-                                <button id="downloadClashBtn" class="btn btn-info">
-                                    <span>⬇️</span> 下载YAML
-                                </button>
-                            </div>
-                        </div>
-                        <div class="help-text" style="margin-top: 16px;">
-                            选择代理工具下载对应的配置文件或订阅链接
                         </div>
                     </div>
                 </div>
@@ -2363,58 +2208,6 @@
                         </div>
                     </div>
 
-                    <!-- GitHub.io链接显示区域 -->
-                    <div class="github-links-section" id="githubLinksSection" style="display: none;">
-                        <h3>🔗 GitHub.io 订阅链接</h3>
-                        <div class="github-links-container">
-                            <div class="github-link-item" id="plainNodesLink" style="display: none;">
-                                <div class="link-label">明文订阅链接：</div>
-                                <div class="link-content">
-                                    <input type="text" id="plainNodesUrl" readonly class="link-input">
-                                    <button id="copyPlainNodesUrl" class="btn btn-info btn-sm">
-                                        <span>📋</span> 复制
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="github-link-item" id="mergedBase64Link" style="display: none;">
-                                <div class="link-label">合并Base64订阅链接：</div>
-                                <div class="link-content">
-                                    <input type="text" id="mergedBase64Url" readonly class="link-input">
-                                    <button id="copyMergedBase64Url" class="btn btn-info btn-sm">
-                                        <span>📋</span> 复制
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="github-link-item" id="mergedOptimalLink" style="display: none;">
-                                <div class="link-label">优选订阅链接：</div>
-                                <div class="link-content">
-                                    <input type="text" id="mergedOptimalUrl" readonly class="link-input">
-                                    <button id="copyMergedOptimalUrl" class="btn btn-info btn-sm">
-                                        <span>📋</span> 复制
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="github-link-item" id="localBase64Link" style="display: none;">
-                                <div class="link-label">本地订阅链接：</div>
-                                <div class="link-content">
-                                    <input type="text" id="localBase64Url" readonly class="link-input">
-                                    <button id="copyLocalBase64Url" class="btn btn-info btn-sm">
-                                        <span>📋</span> 复制
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="github-link-item" id="mergedToPathLink" style="display: none;">
-                                <div class="link-label">指定路径订阅链接：</div>
-                                <div class="link-content">
-                                    <input type="text" id="mergedToPathUrl" readonly class="link-input">
-                                    <button id="copyMergedToPathUrl" class="btn btn-info btn-sm">
-                                        <span>📋</span> 复制
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- GitHub统计 -->
                     <div class="github-stats" id="githubStats" style="display: none;">
                         <div class="stat-item">
@@ -2474,7 +2267,6 @@
                     <div class="card-tab-navigation" id="manualTabNav">
                         <button class="card-tab-btn active" data-tab="base64-tab">转Base64</button>
                         <button class="card-tab-btn" data-tab="ip-port-tab">转IP:端口</button>
-                        <button class="card-tab-btn" data-tab="yaml-tab">转YAML</button>
                     </div>
 
                     <!-- 转Base64标签页 -->
@@ -2523,34 +2315,6 @@
                             <div id="manualIpPortOutput" class="result-content empty">IP:端口列表将在这里显示...</div>
                         </div>
                     </div>
-
-                    <!-- 转YAML标签页 -->
-                    <div class="card-tab-content" id="yaml-tab">
-                        <div class="form-group">
-                            <label for="manualVlessInput3">粘贴Vless节点（每行一个）</label>
-                            <textarea id="manualVlessInput3" placeholder="粘贴vless://开头的节点链接，每行一个"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button id="convertToYamlBtn" class="btn btn-success">
-                                <span>🔧</span> 转换为YAML
-                            </button>
-                            <button id="testParseBtn" class="btn btn-info">
-                                <span>🧪</span> 测试解析
-                            </button>
-                            <button id="copyYamlBtn" class="btn btn-info">
-                                <span>📋</span> 复制YAML
-                            </button>
-                            <button id="downloadYamlBtn" class="btn btn-primary">
-                                <span>📁</span> 下载YAML
-                            </button>
-                        </div>
-                        <div class="result-box" id="manualYamlSection" style="display: none; margin-top: 12px;">
-                            <div class="result-header">
-                                <h3>转换的Clash YAML配置</h3>
-                            </div>
-                            <div id="manualYamlOutput" class="result-content empty">YAML配置将在这里显示...</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -2567,7 +2331,6 @@
             autoBase64Content: '',   // 合并后自动Base64
             manualBase64Content: '', // 手动转换Base64
             manualIpPortContent: '', // 手动提取IP:端口
-            manualYamlContent: '',   // 手动转换YAML
             remoteNodes: [],
             uniqueNodes: [],
             nodeSha: null,
@@ -2973,16 +2736,7 @@
                     if (res.ok) {
                         const result = await res.json();
                         console.log(`✅ ${fileName} 上传成功，新SHA: ${result.content.sha.substring(0, 8)}...`);
-
-                        // 生成GitHub.io链接
-                        const githubIoUrl = `https://raw.githubusercontent.com/${repo}/${branch}/${fileName}`;
-
-                        return {
-                            success: true,
-                            sha: result.content.sha,
-                            isNew: !fileSha,
-                            githubIoUrl: githubIoUrl
-                        };
+                        return { success: true, sha: result.content.sha, isNew: !fileSha };
                     } else {
                         const err = await res.json();
                         console.error(`❌ ${fileName} 上传失败(${res.status}):`, err);
@@ -3079,10 +2833,6 @@
             document.getElementById('copyAutoBase64Btn').addEventListener('click', () => copyText(data.autoBase64Content));
             document.getElementById('convertToBase64Btn').addEventListener('click', convertManualToBase64);
             document.getElementById('copyManualBase64Btn').addEventListener('click', () => copyText(data.manualBase64Content));
-            document.getElementById('convertToYamlBtn').addEventListener('click', convertManualToYaml);
-            document.getElementById('testParseBtn').addEventListener('click', testVlessParse);
-            document.getElementById('copyYamlBtn').addEventListener('click', () => copyText(data.manualYamlContent));
-            document.getElementById('downloadYamlBtn').addEventListener('click', downloadManualYaml);
 
             // 原有的四个上传按钮 - 添加确认提示
             document.getElementById('uploadLocalBase64ToPathBtn').addEventListener('click', () => {
@@ -3124,16 +2874,6 @@
             // 新增：日志控制按钮事件
             document.getElementById('clearLogBtn').addEventListener('click', clearLog);
             document.getElementById('toggleLogBtn').addEventListener('click', toggleLog);
-
-            // 新增：GitHub.io链接复制按钮事件
-            document.getElementById('copyPlainNodesUrl').addEventListener('click', () => copyGithubUrl('plainNodesUrl'));
-            document.getElementById('copyMergedBase64Url').addEventListener('click', () => copyGithubUrl('mergedBase64Url'));
-            document.getElementById('copyMergedOptimalUrl').addEventListener('click', () => copyGithubUrl('mergedOptimalUrl'));
-            document.getElementById('copyLocalBase64Url').addEventListener('click', () => copyGithubUrl('localBase64Url'));
-            document.getElementById('copyMergedToPathUrl').addEventListener('click', () => copyGithubUrl('mergedToPathUrl'));
-
-            // 新增：代理工具下载按钮事件
-            document.getElementById('downloadClashBtn').addEventListener('click', () => downloadProxyConfig('clash'));
 
             // 修复：粘贴CSV内容生成节点的功能
             let csvTimer;
@@ -3202,11 +2942,11 @@
 
         // 明文订阅上传
         async function uploadPlainNodes() {
-            showLoading(true, 'uploadPlainNodesBtn');
+            showLoading(true);
             try {
                 if (data.uniqueNodes.length === 0) {
                     showNotification('错误', '请先合并节点，当前没有可上传的节点数据', 'error');
-                    showLoading(false, 'uploadPlainNodesBtn');
+                    showLoading(false);
                     return;
                 }
 
@@ -3230,14 +2970,11 @@
 
                 showNotification('上传成功', message, 'success');
                 addLog('上传明文节点', `${message} (SHA: ${result.sha.substring(0, 8)}...)`, 'success');
-
-                // 显示GitHub.io链接
-                showGithubLink('plainNodesLink', 'plainNodesUrl', result.githubIoUrl);
             } catch (e) {
                 showNotification('上传失败', '上传过程中发生错误: ' + e.message, 'error');
                 addLog('上传明文节点', '上传失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'uploadPlainNodesBtn');
+                showLoading(false);
             }
         }
 
@@ -4008,7 +3745,7 @@
         }
 
         async function generateVless() {
-            showLoading(true, 'generateBtn');
+            showLoading(true);
             try {
                 const config = getConfig();
 
@@ -4017,7 +3754,7 @@
                     const fileInput = document.getElementById('fileInput');
                     if (!fileInput.files || fileInput.files.length === 0) {
                         showNotification('生成节点失败', '请先上传CSV文件或粘贴内容', 'error');
-                        showLoading(false, 'generateBtn');
+                        showLoading(false);
                         return;
                     }
                     const file = fileInput.files[0];
@@ -4026,7 +3763,7 @@
                     text = document.getElementById('csvInput').value.trim();
                     if (!text) {
                         showNotification('生成节点失败', '请提供CSV数据，可以上传文件或粘贴内容', 'error');
-                        showLoading(false, 'generateBtn');
+                        showLoading(false);
                         return;
                     }
                 }
@@ -4066,7 +3803,7 @@
                 showNotification('节点生成失败', '生成过程中发生错误: ' + e.message, 'error');
                 addLog('生成节点', '生成失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'generateBtn');
+                showLoading(false);
             }
         }
 
@@ -4621,96 +4358,6 @@
             addLog('转换节点', `成功转换 ${lines.length} 个节点为Base64订阅`, 'success');
         }
 
-        // 新增：手动Vless转YAML
-        function convertManualToYaml() {
-            const input = document.getElementById('manualVlessInput3').value.trim();
-            if (!input) {
-                showNotification('转换失败', '请先粘贴Vless节点链接，每行一个vless://开头的链接', 'error');
-                return;
-            }
-
-            const lines = input.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
-            if (lines.length === 0) {
-                showNotification('转换失败', '未检测到有效vless链接，请确保每行以vless://开头', 'error');
-                return;
-            }
-
-            // 生成Clash YAML配置
-            data.manualYamlContent = generateClashYAML(lines);
-
-            const sec = document.getElementById('manualYamlSection');
-            sec.style.display = 'block';
-            document.getElementById('manualYamlOutput').textContent = data.manualYamlContent;
-            document.getElementById('manualYamlOutput').classList.remove('empty');
-
-            showNotification('转换成功', `成功转换 ${lines.length} 个节点为Clash YAML配置`, 'success');
-            addLog('转换节点', `成功转换 ${lines.length} 个节点为Clash YAML配置`, 'success');
-        }
-
-        // 新增：测试Vless URL解析
-        function testVlessParse() {
-            const input = document.getElementById('manualVlessInput3').value.trim();
-            if (!input) {
-                showNotification('测试失败', '请先粘贴Vless节点链接进行测试', 'error');
-                return;
-            }
-
-            const lines = input.split(/\r?\n/).filter(l => l.trim().startsWith('vless://'));
-            if (lines.length === 0) {
-                showNotification('测试失败', '未检测到有效vless链接', 'error');
-                return;
-            }
-
-            let successCount = 0;
-            let failCount = 0;
-            const results = [];
-
-            lines.forEach((line, index) => {
-                const parsed = parseVlessUrl(line.trim());
-                if (parsed) {
-                    successCount++;
-                    results.push(`✅ 节点${index + 1}: ${parsed.name} (${parsed.server}:${parsed.port})`);
-                } else {
-                    failCount++;
-                    results.push(`❌ 节点${index + 1}: 解析失败 - ${line.substring(0, 50)}...`);
-                }
-            });
-
-            const resultText = results.join('\n');
-            const sec = document.getElementById('manualYamlSection');
-            sec.style.display = 'block';
-            document.getElementById('manualYamlOutput').textContent = `解析测试结果:\n成功: ${successCount} 个\n失败: ${failCount} 个\n\n${resultText}`;
-            document.getElementById('manualYamlOutput').classList.remove('empty');
-
-            if (failCount === 0) {
-                showNotification('测试成功', `所有 ${successCount} 个节点解析成功`, 'success');
-            } else {
-                showNotification('测试完成', `成功: ${successCount} 个, 失败: ${failCount} 个`, 'warning');
-            }
-        }
-
-        // 新增：下载手动转换的YAML
-        function downloadManualYaml() {
-            if (!data.manualYamlContent) {
-                showNotification('下载失败', '请先转换Vless节点为YAML格式', 'error');
-                return;
-            }
-
-            const filename = `manual-clash-config-${new Date().toISOString().split('T')[0]}.yaml`;
-            const blob = new Blob([data.manualYamlContent], { type: 'application/x-yaml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            showNotification('下载成功', `${filename} 已下载`, 'success');
-            addLog('下载配置', `下载了手动转换的Clash YAML配置文件`, 'success');
-        }
-
         // 新增：手动Vless转IP:端口
         function convertManualToIpPort() {
             const input = document.getElementById('manualVlessInput2').value.trim();
@@ -5074,19 +4721,19 @@
 
         // 修复：下载远程订阅功能 - 使用更简单可靠的逻辑
         async function downloadRemote() {
-            showLoading(true, 'downloadSubBtn');
+            showLoading(true);
             try {
                 const token = document.getElementById('githubToken').value.trim();
                 if (!token) {
                     showNotification('下载失败', '请先输入GitHub Token，否则无法访问远程仓库', 'error');
-                    showLoading(false, 'downloadSubBtn');
+                    showLoading(false);
                     return;
                 }
 
                 const repo = document.getElementById('githubRepo').value.trim();
                 if (!repo) {
                     showNotification('下载失败', '请先输入GitHub仓库名称，格式为：用户名/仓库名', 'error');
-                    showLoading(false, 'downloadSubBtn');
+                    showLoading(false);
                     return;
                 }
 
@@ -5101,7 +4748,7 @@
                     targetFile = document.getElementById('customDownloadUrl').value.trim();
                     if (!targetFile) {
                         showNotification('下载失败', '请输入自定义路径，或选择预定义路径', 'error');
-                        showLoading(false, 'downloadSubBtn');
+                        showLoading(false);
                         return;
                     }
                 } else {
@@ -5275,7 +4922,7 @@
                 showNotification('下载失败', '下载过程中发生错误: ' + e.message, 'error');
                 addLog('下载远程', '下载失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'downloadSubBtn');
+                showLoading(false);
             }
         }
         // 新增：检测别名是否是格式化的别名
@@ -5465,11 +5112,11 @@
 
         // 修复：上传本地生成Base64到指定路径 - 修正文件格式问题
         async function uploadLocalBase64ToPath() {
-            showLoading(true, 'uploadLocalBase64ToPathBtn');
+            showLoading(true);
             try {
                 if (data.vlessLinks.length === 0) {
                     showNotification('上传失败', '请先生成本地节点，当前没有可上传的节点数据', 'error');
-                    showLoading(false, 'uploadLocalBase64ToPathBtn');
+                    showLoading(false);
                     return;
                 }
 
@@ -5482,7 +5129,7 @@
                     targetFile = document.getElementById('customUploadPath').value.trim();
                     if (!targetFile) {
                         showNotification('上传失败', '请输入自定义上传路径，或选择预定义路径', 'error');
-                        showLoading(false, 'uploadLocalBase64ToPathBtn');
+                        showLoading(false);
                         return;
                     }
                 } else {
@@ -5522,24 +5169,21 @@
 
                 showNotification('上传成功', message, 'success');
                 addLog('上传本地订阅', `${message} (SHA: ${result.sha.substring(0, 8)}...)`, 'success');
-
-                // 显示GitHub.io链接
-                showGithubLink('localBase64Link', 'localBase64Url', result.githubIoUrl);
             } catch (e) {
                 showNotification('上传失败', '上传过程中发生错误: ' + e.message, 'error');
                 addLog('上传本地订阅', '上传失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'uploadLocalBase64ToPathBtn');
+                showLoading(false);
             }
         }
 
         // 修复：上传合并Base64到MainNode
         async function uploadMergedBase64() {
-            showLoading(true, 'uploadMergedBase64Btn');
+            showLoading(true);
             try {
                 if (data.uniqueNodes.length === 0) {
                     showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
-                    showLoading(false, 'uploadMergedBase64Btn');
+                    showLoading(false);
                     return;
                 }
 
@@ -5567,24 +5211,21 @@
 
                 showNotification('上传成功', message, 'success');
                 addLog('上传合并Base64', `${message} (SHA: ${result.sha.substring(0, 8)}...)`, 'success');
-
-                // 显示GitHub.io链接
-                showGithubLink('mergedBase64Link', 'mergedBase64Url', result.githubIoUrl);
             } catch (e) {
                 showNotification('上传失败', '上传过程中发生错误: ' + e.message, 'error');
                 addLog('上传合并Base64', '上传失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'uploadMergedBase64Btn');
+                showLoading(false);
             }
         }
 
         // 修复：上传合并订阅到OptimalNode
         async function uploadMergedOptimal() {
-            showLoading(true, 'uploadMergedOptimalBtn');
+            showLoading(true);
             try {
                 if (data.uniqueNodes.length === 0) {
                     showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
-                    showLoading(false, 'uploadMergedOptimalBtn');
+                    showLoading(false);
                     return;
                 }
 
@@ -5612,24 +5253,21 @@
 
                 showNotification('上传成功', message, 'success');
                 addLog('上传合并优选订阅', `${message} (SHA: ${result.sha.substring(0, 8)}...)`, 'success');
-
-                // 显示GitHub.io链接
-                showGithubLink('mergedOptimalLink', 'mergedOptimalUrl', result.githubIoUrl);
             } catch (e) {
                 showNotification('上传失败', '上传过程中发生错误: ' + e.message, 'error');
                 addLog('上传合并优选订阅', '上传失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'uploadMergedOptimalBtn');
+                showLoading(false);
             }
         }
 
         // 新增：上传合并订阅至指定路径
         async function uploadMergedToPath() {
-            showLoading(true, 'uploadMergedToPathBtn');
+            showLoading(true);
             try {
                 if (data.uniqueNodes.length === 0) {
                     showNotification('上传失败', '请先合并节点，当前没有可上传的合并节点数据', 'error');
-                    showLoading(false, 'uploadMergedToPathBtn');
+                    showLoading(false);
                     return;
                 }
 
@@ -5642,7 +5280,7 @@
                     targetFile = document.getElementById('customUploadPath').value.trim();
                     if (!targetFile) {
                         showNotification('上传失败', '请输入自定义上传路径，或选择预定义路径', 'error');
-                        showLoading(false, 'uploadMergedToPathBtn');
+                        showLoading(false);
                         return;
                     }
                 } else {
@@ -5683,20 +5321,17 @@
 
                 showNotification('上传成功', message, 'success');
                 addLog('上传合并至指定路径', `${message} (SHA: ${result.sha.substring(0, 8)}...)`, 'success');
-
-                // 显示GitHub.io链接
-                showGithubLink('mergedToPathLink', 'mergedToPathUrl', result.githubIoUrl);
             } catch (e) {
                 showNotification('上传失败', '上传过程中发生错误: ' + e.message, 'error');
                 addLog('上传合并至指定路径', '上传失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'uploadMergedToPathBtn');
+                showLoading(false);
             }
         }
 
         //一键同步(远端明文和本地明文)和(远端Base64和本地Base64)方法
         async function oneClickSync() {
-            showLoading(true, 'syncBtn');
+            showLoading(true);
             try {
                 // 1. 解析本地节点
                 if (data.vlessLinks.length === 0) {
@@ -5772,357 +5407,7 @@
                 showNotification('一键同步失败', '同步过程中发生错误: ' + e.message, 'error');
                 addLog('一键同步', '同步失败: ' + e.message, 'error');
             } finally {
-                showLoading(false, 'syncBtn');
-            }
-        }
-
-        // 显示GitHub.io链接的函数
-        function showGithubLink(linkId, urlId, url) {
-            const linkItem = document.getElementById(linkId);
-            const urlInput = document.getElementById(urlId);
-            const linksSection = document.getElementById('githubLinksSection');
-
-            if (linkItem && urlInput) {
-                urlInput.value = url;
-                linkItem.style.display = 'block';
-                linksSection.style.display = 'block';
-            }
-        }
-
-        // 复制GitHub.io链接的函数
-        function copyGithubUrl(urlId) {
-            const urlInput = document.getElementById(urlId);
-            if (urlInput && urlInput.value) {
-                copyText(urlInput.value);
-                showNotification('复制成功', 'GitHub.io链接已复制到剪贴板', 'success');
-            }
-        }
-
-        // 下载代理工具配置文件的函数
-        function downloadProxyConfig(toolType) {
-            // 优先使用本地生成的Vless节点，如果没有则使用合并后的节点
-            const nodes = data.vlessLinks.length > 0 ? data.vlessLinks : (data.uniqueNodes.length > 0 ? data.uniqueNodes : []);
-
-            if (nodes.length === 0) {
-                showNotification('下载失败', '没有可用的节点数据，请先生成Vless节点', 'error');
-                return;
-            }
-
-            let content = '';
-            let filename = '';
-            let mimeType = 'text/plain';
-
-            if (toolType === 'clash') {
-                content = generateClashYAML(nodes);
-                filename = `clash-config-${new Date().toISOString().split('T')[0]}.yaml`;
-                mimeType = 'application/x-yaml';
-            } else {
-                showNotification('错误', '不支持的代理工具类型', 'error');
-                return;
-            }
-
-            // 创建并下载文件
-            const blob = new Blob([content], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            showNotification('下载成功', `${filename} 已下载`, 'success');
-            addLog('配置文件下载', `下载了 Clash 配置文件，包含 ${nodes.length} 个节点`, 'success');
-        }
-
-        // 生成Clash YAML配置
-        function generateClashYAML(nodes) {
-            const proxies = [];
-            const proxyNames = [];
-
-            nodes.forEach((node, index) => {
-                try {
-                    const parsed = parseVlessUrl(node);
-                    if (parsed) {
-                        const proxyName = parsed.name || `节点${index + 1}`;
-                        proxyNames.push(proxyName);
-
-                        const proxy = {
-                            name: proxyName,
-                            type: 'vless',
-                            server: parsed.server,
-                            port: parsed.port,
-                            uuid: parsed.uuid,
-                            network: parsed.network || 'tcp',
-                            tls: parsed.tls,
-                            'skip-cert-verify': parsed.skipCertVerify || false,
-                            udp: true
-                        };
-
-                        // 添加SNI
-                        if (parsed.sni) {
-                            proxy.sni = parsed.sni;
-                        }
-
-                        // 添加ALPN
-                        if (parsed.alpn) {
-                            proxy.alpn = parsed.alpn.split(',');
-                        }
-
-                        // 添加flow (XTLS)
-                        if (parsed.flow) {
-                            proxy.flow = parsed.flow;
-                        }
-
-                        // 添加ws配置
-                        if (parsed.network === 'ws') {
-                            proxy['ws-opts'] = {
-                                path: parsed.wsPath || '/',
-                                headers: parsed.wsHeaders || {}
-                            };
-                        }
-
-                        proxies.push(proxy);
-                    }
-                } catch (e) {
-                    console.warn(`跳过无效节点: ${node}`, e);
-                }
-            });
-
-            const config = {
-                port: 7890,
-                'socks-port': 7891,
-                'redir-port': 7892,
-                'mixed-port': 7893,
-                'tproxy-port': 7895,
-                'allow-lan': true,
-                mode: 'rule',
-                'log-level': 'info',
-                ipv6: false,
-                'external-controller': '127.0.0.1:9090',
-                dns: {
-                    enable: true,
-                    ipv6: false,
-                    'enhanced-mode': 'fake-ip',
-                    'fake-ip-range': '198.18.0.1/16',
-                    nameserver: [
-                        '114.114.114.114',
-                        '223.5.5.5',
-                        '8.8.8.8',
-                        '1.1.1.1'
-                    ]
-                },
-                proxies: proxies,
-                'proxy-groups': [
-                    {
-                        name: '🚀 节点选择',
-                        type: 'select',
-                        proxies: proxyNames
-                    },
-                    {
-                        name: '♻️ 自动选择',
-                        type: 'url-test',
-                        proxies: proxyNames,
-                        url: 'http://www.gstatic.com/generate_204',
-                        interval: 300
-                    },
-                    {
-                        name: '🔥 故障转移',
-                        type: 'fallback',
-                        proxies: proxyNames,
-                        url: 'http://www.gstatic.com/generate_204',
-                        interval: 300
-                    }
-                ],
-                rules: [
-                    'DOMAIN-SUFFIX,google.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,youtube.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,github.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,twitter.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,facebook.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,instagram.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,telegram.org,🚀 节点选择',
-                    'DOMAIN-SUFFIX,netflix.com,🚀 节点选择',
-                    'DOMAIN-SUFFIX,spotify.com,🚀 节点选择',
-                    'GEOIP,CN,DIRECT',
-                    'MATCH,♻️ 自动选择'
-                ]
-            };
-
-            // 使用js-yaml库或手动构建YAML格式
-            // 由于浏览器环境，我们手动构建YAML格式
-            let yamlContent = '';
-
-            // 添加代理配置
-            yamlContent += 'proxies:\n';
-            proxies.forEach(proxy => {
-                yamlContent += '  - name: "' + proxy.name + '"\n';
-                yamlContent += '    type: ' + proxy.type + '\n';
-                yamlContent += '    server: ' + proxy.server + '\n';
-                yamlContent += '    port: ' + proxy.port + '\n';
-                yamlContent += '    uuid: ' + proxy.uuid + '\n';
-                yamlContent += '    network: ' + proxy.network + '\n';
-                yamlContent += '    tls: ' + proxy.tls + '\n';
-                yamlContent += '    skip-cert-verify: ' + proxy['skip-cert-verify'] + '\n';
-                yamlContent += '    udp: ' + proxy.udp + '\n';
-
-                // 添加SNI
-                if (proxy.sni) {
-                    yamlContent += '    sni: "' + proxy.sni + '"\n';
-                }
-
-                // 添加ALPN
-                if (proxy.alpn && Array.isArray(proxy.alpn)) {
-                    yamlContent += '    alpn:\n';
-                    proxy.alpn.forEach(alpn => {
-                        yamlContent += '      - "' + alpn.trim() + '"\n';
-                    });
-                }
-
-                // 添加flow (XTLS)
-                if (proxy.flow) {
-                    yamlContent += '    flow: "' + proxy.flow + '"\n';
-                }
-
-                if (proxy['ws-opts']) {
-                    yamlContent += '    ws-opts:\n';
-                    yamlContent += '      path: "' + proxy['ws-opts'].path + '"\n';
-                    if (proxy['ws-opts'].headers && Object.keys(proxy['ws-opts'].headers).length > 0) {
-                        yamlContent += '      headers:\n';
-                        Object.entries(proxy['ws-opts'].headers).forEach(([key, value]) => {
-                            yamlContent += '        ' + key + ': "' + value + '"\n';
-                        });
-                    }
-                }
-                yamlContent += '\n';
-            });
-
-            // 添加代理组
-            yamlContent += 'proxy-groups:\n';
-            config['proxy-groups'].forEach(group => {
-                yamlContent += '  - name: "' + group.name + '"\n';
-                yamlContent += '    type: ' + group.type + '\n';
-                yamlContent += '    proxies:\n';
-                group.proxies.forEach(proxy => {
-                    yamlContent += '      - "' + proxy + '"\n';
-                });
-                if (group.url) {
-                    yamlContent += '    url: "' + group.url + '"\n';
-                }
-                if (group.interval) {
-                    yamlContent += '    interval: ' + group.interval + '\n';
-                }
-                yamlContent += '\n';
-            });
-
-            // 添加规则
-            yamlContent += 'rules:\n';
-            config.rules.forEach(rule => {
-                yamlContent += '  - ' + rule + '\n';
-            });
-
-            // 添加其他配置
-            yamlContent += '\nport: 7890\n';
-            yamlContent += 'socks-port: 7891\n';
-            yamlContent += 'redir-port: 7892\n';
-            yamlContent += 'mixed-port: 7893\n';
-            yamlContent += 'tproxy-port: 7895\n';
-            yamlContent += 'allow-lan: true\n';
-            yamlContent += 'mode: rule\n';
-            yamlContent += 'log-level: info\n';
-            yamlContent += 'ipv6: false\n';
-            yamlContent += 'external-controller: 127.0.0.1:9090\n';
-
-            return yamlContent;
-        }
-
-        // 解析Vless URL的辅助函数
-        function parseVlessUrl(url) {
-            try {
-                // 检查是否是vless协议
-                if (!url.startsWith('vless://')) {
-                    return null;
-                }
-
-                // 移除协议部分
-                let urlWithoutProtocol = url.substring(8); // 移除 'vless://'
-
-                // 处理包含#的URL，需要小心处理fragment
-                let urlWithoutFragment = urlWithoutProtocol;
-                let remarks = '';
-
-                // 检查是否有fragment（#后面的内容）
-                const hashIndex = urlWithoutProtocol.indexOf('#');
-                if (hashIndex !== -1) {
-                    urlWithoutFragment = urlWithoutProtocol.substring(0, hashIndex);
-                    remarks = urlWithoutProtocol.substring(hashIndex + 1);
-                    // URL解码remarks
-                    try {
-                        remarks = decodeURIComponent(remarks);
-                    } catch (e) {
-                        // 如果解码失败，保持原样
-                    }
-                }
-
-                // 分离路径和查询参数
-                const queryIndex = urlWithoutFragment.indexOf('?');
-                let pathPart = urlWithoutFragment;
-                let queryPart = '';
-
-                if (queryIndex !== -1) {
-                    pathPart = urlWithoutFragment.substring(0, queryIndex);
-                    queryPart = urlWithoutFragment.substring(queryIndex + 1);
-                }
-
-                // 解析路径部分: uuid@server:port
-                const pathParts = pathPart.split('@');
-                if (pathParts.length !== 2) {
-                    return null;
-                }
-
-                const uuid = pathParts[0];
-                const serverPort = pathParts[1].split(':');
-
-                if (serverPort.length !== 2) {
-                    return null;
-                }
-
-                const server = serverPort[0];
-                const port = parseInt(serverPort[1]);
-
-                if (!uuid || !server || isNaN(port)) {
-                    return null;
-                }
-
-                // 解析查询参数
-                const params = {};
-                if (queryPart) {
-                    const paramPairs = queryPart.split('&');
-                    paramPairs.forEach(pair => {
-                        const [key, value] = pair.split('=');
-                        params[key] = value || '';
-                    });
-                }
-
-                return {
-                    uuid: uuid,
-                    server: server,
-                    port: port,
-                    name: params.name || remarks || `节点-${server}:${port}`,
-                    network: params.type || 'tcp',
-                    tls: params.security === 'tls',
-                    wsPath: params.path ? decodeURIComponent(params.path) : '/',
-                    wsHeaders: params.host ? { Host: params.host } : {},
-                    skipCertVerify: params.allowInsecure === '1' || params.fp === 'chrome',
-                    encryption: params.encryption || 'none',
-                    sni: params.sni,
-                    alpn: params.alpn,
-                    flow: params.flow
-                };
-            } catch (e) {
-                console.warn('解析Vless URL失败:', url, e);
-                return null;
+                showLoading(false);
             }
         }
 
@@ -6289,23 +5574,8 @@
             document.getElementById('syncNodeCount').textContent = `${s.unique}节点`;
         }
 
-        function showLoading(show, buttonId = null) {
-            if (buttonId) {
-                // 按钮级别加载动画
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    if (show) {
-                        button.classList.add('btn-loading');
-                        button.disabled = true;
-                    } else {
-                        button.classList.remove('btn-loading');
-                        button.disabled = false;
-                    }
-                }
-            } else {
-                // 全局加载动画（保留作为后备）
-                document.getElementById('loading').style.display = show ? 'block' : 'none';
-            }
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
 
         function copyText(text) {
