@@ -7011,7 +7011,7 @@
             // 外部服务备选（优先中国友好服务）
             const externalCandidates = [
                 // 草料二维码变体（优先）
-                `https://cli.im/api?text=${encodeURIComponent(targetUrl)}&w=${size}`,
+                // 已移除无效的 `https://cli.im/api?text=` 入口，保留有效的 qrcode 接口作为首选
                 `https://cli.im/api/qrcode?text=${encodeURIComponent(targetUrl)}&w=${size}`,
                 // api.qrserver.com（原先使用）
                 `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(targetUrl)}`,
