@@ -2428,6 +2428,18 @@
                                 </div>
                             </div>
 
+                            <!-- 单独一行：删除远程文件（及其 .yaml）功能 -->
+                            <div class="config-row">
+                                <div class="form-group" style="width:100%;">
+                                    <label for="deleteFileName">删除远程文件（输入文件名，如：OptimalNode）</label>
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <input type="text" id="deleteFileName" placeholder="例如：OptimalNode" style="flex:1;" />
+                                        <button id="deleteRemoteFileBtn" class="btn btn-warning">删除指定路径文件</button>
+                                    </div>
+                                    <div class="help-text">将删除 GitHub 仓库中对应的文件及同名的 .yaml 文件，请谨慎操作。</div>
+                                </div>
+                            </div>
+
                             <div class="config-row">
                                 <div class="form-group">
                                     <label for="fileLinkTypeSelect">生成链接类型（默认 GitHub Pages）</label>
@@ -3299,6 +3311,68 @@
             document.getElementById('copyLocalBase64Btn').addEventListener('click', () => copyText(data.localBase64Content));
             document.getElementById('copyLocalYamlBtn').addEventListener('click', () => copyText(data.localYamlContent));
             document.getElementById('downloadLocalYamlBtn').addEventListener('click', downloadLocalYaml);
+            
+            // 删除远程文件（及其 .yaml）功能实现
+            async function deleteSingleGithubFile(filePath) {
+                const token = document.getElementById('githubToken').value.trim();
+                const repo = document.getElementById('githubRepo').value.trim();
+                const branch = document.getElementById('githubBranch').value.trim() || 'main';
+                if (!token) throw new Error('缺少GitHub Token，请先在GitHub配置中输入有效的令牌');
+                if (!repo) throw new Error('缺少GitHub 仓库设置');
+                if (!filePath) throw new Error('未指定要删除的文件名');
+
+                // 先获取文件信息以获取 sha
+                const metaRes = await fetch(`https://api.github.com/repos/${repo}/contents/${encodeURIComponent(filePath)}?ref=${branch}`, {
+                    headers: {
+                        Authorization: `token ${token}`,
+                        Accept: 'application/vnd.github.v3+json'
+                    }
+                });
+                if (metaRes.status === 404) {
+                    return { found: false };
+                }
+                if (!metaRes.ok) {
+                    const txt = await metaRes.text();
+                    throw new Error(`获取文件信息失败: ${metaRes.status} ${txt}`);
+                }
+                const meta = await metaRes.json();
+                const sha = meta.sha;
+
+                const delRes = await fetch(`https://api.github.com/repos/${repo}/contents/${encodeURIComponent(filePath)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `token ${token}`,
+                        Accept: 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: `Delete ${filePath} via UI`, sha: sha, branch: branch })
+                });
+                if (!delRes.ok) {
+                    const txt = await delRes.text();
+                    throw new Error(`删除文件失败: ${delRes.status} ${txt}`);
+                }
+                return { found: true };
+            }
+
+            async function deleteGithubFiles(baseName) {
+                if (!baseName) throw new Error('请输入要删除的文件名');
+                const results = [];
+                // 要删除的目标：baseName 以及 baseName.yaml
+                const candidates = [baseName, `${baseName}.yaml`];
+                for (const f of candidates) {
+                    try {
+                        const r = await deleteSingleGithubFile(f);
+                        if (r.found) {
+                            results.push({ file: f, deleted: true });
+                        } else {
+                            results.push({ file: f, deleted: false, reason: 'not found' });
+                        }
+                    } catch (e) {
+                        results.push({ file: f, deleted: false, reason: e.message });
+                    }
+                }
+                return results;
+            }
             document.getElementById('copyAutoBase64Btn').addEventListener('click', () => copyText(data.autoBase64Content));
             document.getElementById('convertToBase64Btn').addEventListener('click', convertManualToBase64);
             document.getElementById('copyManualBase64Btn').addEventListener('click', () => copyText(data.manualBase64Content));
@@ -3307,6 +3381,36 @@
             document.getElementById('copyYamlBtn').addEventListener('click', () => copyText(data.manualYamlContent));
             document.getElementById('downloadYamlBtn').addEventListener('click', downloadManualYaml);
             document.getElementById('uploadYamlBtn').addEventListener('click', uploadManualYaml);
+
+            // 绑定：删除远程文件按钮
+            const delBtn = document.getElementById('deleteRemoteFileBtn');
+            if (delBtn) {
+                delBtn.addEventListener('click', () => {
+                    const base = document.getElementById('deleteFileName').value.trim();
+                    if (!base) {
+                        showNotification('错误', '请输入要删除的文件名（例如：OptimalNode）', 'error');
+                        return;
+                    }
+                    showConfirmDialog('确认删除', `确定删除远程文件 ${base} 及 ${base}.yaml 吗？此操作不可恢复。`, async () => {
+                        try {
+                            showLoading(true, 'deleteRemoteFileBtn');
+                            const res = await deleteGithubFiles(base);
+                            const ok = res.filter(r => r.deleted).map(r => r.file);
+                            const not = res.filter(r => !r.deleted).map(r => `${r.file}(${r.reason || '未找到'})`);
+                            let msg = '';
+                            if (ok.length) msg += `已删除：${ok.join(', ')}\n`;
+                            if (not.length) msg += `未删除：${not.join(', ')}`;
+                            showNotification('删除完成', msg, ok.length ? 'success' : 'warning');
+                            addLog('删除远程文件', `删除结果: ${msg}`, ok.length ? 'success' : 'warning');
+                        } catch (e) {
+                            showNotification('删除失败', e.message || String(e), 'error');
+                            addLog('删除远程文件', '删除失败: ' + (e.message || String(e)), 'error');
+                        } finally {
+                            showLoading(false, 'deleteRemoteFileBtn');
+                        }
+                    }, null, 'warning');
+                });
+            }
 
             // 原有的四个上传按钮 - 添加确认提示
             document.getElementById('uploadLocalBase64ToPathBtn').addEventListener('click', () => {
