@@ -4,7 +4,11 @@
 
 默认示例 GitHub Pages 发布页（基于默认仓库设置 `DaiZhouHui/CustomNode`）：
 
-- 仓库首页（Pages）：https://daizhouhui.github.io/CustomNode/
+- 网页首页：https://daizhouhui.github.io/NodeWeb/
+
+节点仓库（基于默认仓库设置 `DaiZhouHui/CustomNode`）：
+
+- 仓库首页 ：https://github.com/DaiZhouHui/CustomNode
 
 默认三个节点订阅文件（Pages 版本示例）：
 
