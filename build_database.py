@@ -20,7 +20,7 @@ if not MAXMIND_LICENSE_KEY:
     print("   GitHub Actions：已在仓库Secrets中设置")
     sys.exit(1)
 
-OUTPUT_JSON = "data/database.json"  # 固定文件名，与前端匹配
+OUTPUT_JSON = "database.json"  # 固定文件名，与前端匹配
 TEMP_DIR = "temp_tiered_data"
 
 # ====== 三级精度配置 ======
