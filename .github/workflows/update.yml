@@ -1,0 +1,123 @@
+name: Update IP Country Database
+
+on:
+  # 1. 定时触发：每周一北京时间上午11点运行 (UTC时间周一凌晨3点)
+  schedule:
+    - cron: '0 3 * * 1'
+  # 2. 允许手动触发工作流（在GitHub网页点击运行）
+  workflow_dispatch:
+    inputs:
+      skip_commit:
+        description: '跳过自动提交（仅测试构建）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+# 设置必要的写入权限（用于推送更新）
+permissions:
+  contents: write
+
+jobs:
+  update-database:
+    runs-on: ubuntu-latest  # 使用GitHub提供的最新Ubuntu环境
+    
+    steps:
+      # 步骤1：检出仓库代码
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # 获取全部提交历史，以便正确生成新提交
+          fetch-depth: 0
+          
+      # 步骤2：设置Python环境
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'  # 建议使用与本地一致的版本
+          
+      # 步骤3：安装Python依赖
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # 列出你的脚本所需的所有依赖
+          pip install ipaddress  # 通常是内置的，但明确声明更安全
+          
+      # 步骤4：运行数据库构建脚本（使用安全密钥）
+      - name: 🛠️ Build IP database
+        env:
+          # 关键：从GitHub Secrets读取你的MaxMind许可证密钥
+          MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
+        run: |
+          echo "开始构建IP国家数据库..."
+          # 确保脚本使用环境变量中的密钥
+          # 如果你的脚本需要从环境变量读取，请相应修改
+          # 这里假设你的脚本已修改为从环境变量读取
+          python build_database.py
+          echo "数据库构建完成！"
+          
+          # 显示生成的文件信息
+          echo "=== 生成的文件信息 ==="
+          ls -lh database.json
+          echo "===================="
+          
+      # 步骤5：检查文件变化（用于判断是否需要提交）
+      - name: 🔍 Check for changes
+        id: check-changes
+        run: |
+          git status --porcelain
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "数据库文件已更新"
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "changes_summary=$(git status --porcelain)" >> $GITHUB_OUTPUT
+          else
+            echo "数据库文件无变化"
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          fi
+          
+      # 步骤6：配置Git并提交更新（如果检测到变化且不跳过）
+      - name: 💾 Commit and push updates
+        if: steps.check-changes.outputs.changes_detected == 'true' && github.event.inputs.skip_commit != 'true'
+        run: |
+          # 配置Git用户信息（使用GitHub Actions的机器人身份）
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # 添加所有更改的文件（主要是database.json）
+          git add .
+          
+          # 生成有意义的提交信息
+          commit_msg="🤖 chore: 自动更新IP国家数据库 [$(date +'%Y-%m-%d')]"
+          
+          # 获取文件变化详情（用于提交信息）
+          file_changes=$(git diff --cached --name-only)
+          db_size=$(ls -lh database.json | awk '{print $5}')
+          commit_msg+="\n\n更新文件: $file_changes"
+          commit_msg+="\n数据库大小: $db_size"
+          commit_msg+="\n[skip ci]"  # 避免触发其他CI/CD
+          
+          # 提交并推送
+          git commit -m "$commit_msg"
+          git push
+          
+      # 步骤7：如果没有变化，输出提示
+      - name: ℹ️ No changes detected
+        if: steps.check-changes.outputs.changes_detected == 'false'
+        run: |
+          echo "✅ 数据库已是最新版本，无需更新。"
+          echo "当前数据库信息:"
+          ls -lh database.json
+          
+      # 步骤8：如果选择跳过提交，输出提示
+      - name: ⚠️ Skipped commit (manual mode)
+        if: steps.check-changes.outputs.changes_detected == 'true' && github.event.inputs.skip_commit == 'true'
+        run: |
+          echo "⏸️ 检测到数据库变化，但已跳过自动提交（手动模式）。"
+          echo "变化摘要:"
+          git status --porcelain
+          echo ""
+          echo "你可以："
+          echo "1. 手动提交这些更改"
+          echo "2. 重新运行工作流并取消选择'skip_commit'选项"
