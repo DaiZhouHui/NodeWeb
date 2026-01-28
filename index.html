@@ -32,17 +32,17 @@
             <button class="quick-btn" onclick="mergeAndShow()">
                 <span>🔄</span> 合并节点
             </button>
-            <button class="quick-btn" onclick="oneClickSync()">
+            <!-- <button class="quick-btn" onclick="oneClickSync()">
                 <span>🚀</span> 一键同步
-            </button>
-            <button class="quick-btn" onclick="uploadLocalBase64ToPath()">
+            </button> -->
+            <!-- <button class="quick-btn" onclick="uploadLocalBase64ToPath()">
                 <span>📤</span> 上传本地订阅至指定路径
+            </button> -->
+            <button class="quick-btn" onclick="uploadMergedOptimal()">
+                <span>📤</span> 上传合并优选订阅
             </button>
             <button class="quick-btn" onclick="uploadMergedBase64()">
                 <span>📤</span> 上传合并主要订阅
-            </button>
-            <button class="quick-btn" onclick="uploadMergedOptimal()">
-                <span>📤</span> 上传合并优选订阅
             </button>
             <button class="quick-btn" onclick="uploadPlainNodes()">
                 <span>📤</span> 上传合并明文订阅
@@ -294,7 +294,7 @@
                                 其他固定参数：<br>
                                 • 加密方式：none<br>
                                 • 网络类型：ws<br>
-                                • Path：/<br>
+                                • Path：/?ed=2048<br>
                                 • TLS：启用<br>
                                 • Flow：空<br>
                                 • 伪装方式：空
@@ -976,7 +976,7 @@
                 if (headerInfo && !headerInfo.classList.contains('hidden')) {
                     headerInfo.classList.add('hidden');
                 }
-            }, 5000);
+            }, 3000);
         });
 
         // 定时同步功能已移除
@@ -2315,7 +2315,7 @@
                     }
                 }
 
-                data.vlessLinks = parseAndGenerate(text, config);
+                data.vlessLinks = await parseAndGenerate(text, config);
                 data.stats.local = data.vlessLinks.length;
                 data.cache.lastLocalGeneration = Date.now();
 
@@ -2378,19 +2378,19 @@
             };
         }
 
-        function parseAndGenerate(text, config) {
+        async function parseAndGenerate(text, config) {
             // 如果是文件上传的CSV，尝试解析完整CSV
             if (data.currentSource === 'file') {
-                return parseCSVFile(text, config);
+                return await parseCSVFile(text, config);
             } else {
                 // 如果是粘贴内容，使用智能分割
-                return parsePasteText(text, config);
+                return await parsePasteText(text, config);
             }
         }
 
         // 解析CSV文件 - 修复别名生成逻辑
         // 解析CSV文件 - 修复别名生成逻辑，按照需求1生成别名
-        function parseCSVFile(text, config) {
+        async function parseCSVFile(text, config) {
             const nodes = [];
             const regionGroups = {};
             const lines = text.split(/\r?\n/).filter(line => line.trim());
@@ -2484,34 +2484,43 @@
                         }
                     }
 
-                    // 转换地区码为中文名称
+                    // 转换地区码为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
                     let chineseRegion = '';
                     if (region && region.trim()) {
-                        const regionUpper = region.trim().toUpperCase();
-                        if (regionCodeToChinese[regionUpper]) {
+                        const regionTrimmed = region.trim();
+                        const regionUpper = regionTrimmed.toUpperCase();
+                        if (countryNameToChinese[regionTrimmed]) {
+                            chineseRegion = countryNameToChinese[regionTrimmed];
+                        } else if (regionCodeToChinese[regionUpper]) {
                             chineseRegion = regionCodeToChinese[regionUpper];
                         }
                     }
 
-                    // 转换城市名为中文名称
+                    // 转换城市名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
                     let chineseCity = '';
                     if (city && city.trim()) {
-                        const cityUpper = city.trim().toUpperCase();
-                        if (regionCodeToChinese[cityUpper]) {
+                        const cityTrimmed = city.trim();
+                        const cityUpper = cityTrimmed.toUpperCase();
+                        if (countryNameToChinese[cityTrimmed]) {
+                            chineseCity = countryNameToChinese[cityTrimmed];
+                        } else if (regionCodeToChinese[cityUpper]) {
                             chineseCity = regionCodeToChinese[cityUpper];
                         } else {
-                            chineseCity = city;
+                            chineseCity = cityTrimmed;
                         }
                     }
 
-                    // 转换国家名为中文名称
+                    // 转换国家名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
                     let chineseCountry = '';
                     if (country && country.trim()) {
-                        const countryName = country.trim();
-                        if (countryNameToChinese[countryName]) {
-                            chineseCountry = countryNameToChinese[countryName];
+                        const countryTrimmed = country.trim();
+                        const countryUpper = countryTrimmed.toUpperCase();
+                        if (countryNameToChinese[countryTrimmed]) {
+                            chineseCountry = countryNameToChinese[countryTrimmed];
+                        } else if (regionCodeToChinese[countryUpper]) {
+                            chineseCountry = regionCodeToChinese[countryUpper];
                         } else {
-                            chineseCountry = country;
+                            chineseCountry = countryTrimmed;
                         }
                     }
 
@@ -2529,9 +2538,9 @@
                         }
                     }
 
-                    // 如果没有从CSV获取到地区信息，使用IP检测
+                    // 如果没有从CSV获取到地区信息，使用IP检测（等待异步结果）
                     if (!regionNameForGroup) {
-                        const detectedLocation = getLocation(ip);
+                        const detectedLocation = await getLocation(ip);
                         regionNameForGroup = detectedLocation !== '未知' ? detectedLocation : config.prefix;
                     }
 
@@ -2546,11 +2555,15 @@
                     // 为当前节点生成序号
                     const sequence = regionGroups[regionNameForGroup].counter.toString().padStart(2, '0');
 
-                    // 生成别名部分数组
+                    // 生成别名部分数组，规则：
+                    // - 如果存在城市名： 城市名+序号 - （可选速度） - 端口 - 国家名 - IP
+                    // - 否则（只有国家或地区）： 国家/地区名+序号 - （可选速度） - 端口 - IP
                     const aliasParts = [];
 
-                    // 1. 地区名+序号（如：圣何塞01）
-                    aliasParts.push(`${regionNameForGroup}${sequence}`);
+                    // 1. 地区名+序号（优先城市，其次地区码/国家）
+                    const hasCity = !!(chineseCity && chineseCity.trim());
+                    const leadingName = hasCity ? chineseCity.trim() : regionNameForGroup;
+                    aliasParts.push(`${leadingName}${sequence}`);
 
                     // 2. 下载速度（如果有）
                     if (speed) {
@@ -2560,9 +2573,14 @@
                     // 3. 端口
                     aliasParts.push(port.toString());
 
-                    // 4. 国家（如果有）
-                    if (chineseCountry) {
-                        aliasParts.push(chineseCountry);
+                    // 4. 如果有城市，则在端口后插入国家名（若有）
+                    // 但如果国家是中国或新加坡且已有城市/地区名，则不显示国家名
+                    if (hasCity && chineseCountry && chineseCountry.trim()) {
+                        const shouldSkipCountry = (chineseCountry === '中国' || chineseCountry === '新加坡') &&
+                            (hasCity || (chineseRegion && chineseRegion.trim()));
+                        if (!shouldSkipCountry) {
+                            aliasParts.push(chineseCountry.trim());
+                        }
                     }
 
                     // 5. IP地址
@@ -2598,10 +2616,10 @@
         }
 
         // 新增：从CSV信息生成别名（根据需求1）
-        function generateRemarkFromCSV(ip, port, city, country, region, speed, config) {
+        async function generateRemarkFromCSV(ip, port, city, country, region, speed, config) {
             // 如果不使用CSV信息，使用默认方式
             if (!config.useCsvInfo) {
-                const location = getLocation(ip);
+                const location = await getLocation(ip);
                 const regionKey = location !== '未知' ? location : config.prefix;
                 return {
                     remark: `${location}-${port}-${ip}`,
@@ -2609,82 +2627,99 @@
                 };
             }
 
-            // 转换地区码为中文名称（如果适用）
+            // 转换地区码为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
             let chineseRegion = region;
             if (region && region.trim()) {
-                const regionUpper = region.trim().toUpperCase();
-                if (regionCodeToChinese[regionUpper]) {
+                const regionTrimmed = region.trim();
+                const regionUpper = regionTrimmed.toUpperCase();
+                if (countryNameToChinese[regionTrimmed]) {
+                    chineseRegion = countryNameToChinese[regionTrimmed];
+                } else if (regionCodeToChinese[regionUpper]) {
                     chineseRegion = regionCodeToChinese[regionUpper];
                 }
             }
 
-            // 转换城市名为中文名称（如果适用）
+            // 转换城市名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
             let chineseCity = city;
             if (city && city.trim()) {
-                const cityUpper = city.trim().toUpperCase();
-                if (regionCodeToChinese[cityUpper]) {
+                const cityTrimmed = city.trim();
+                const cityUpper = cityTrimmed.toUpperCase();
+                if (countryNameToChinese[cityTrimmed]) {
+                    chineseCity = countryNameToChinese[cityTrimmed];
+                } else if (regionCodeToChinese[cityUpper]) {
                     chineseCity = regionCodeToChinese[cityUpper];
                 }
             }
 
-            // 转换国家名为中文名称（如果适用）
+            // 转换国家名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
             let chineseCountry = country;
             if (country && country.trim()) {
-                const countryName = country.trim();
-                if (countryNameToChinese[countryName]) {
-                    chineseCountry = countryNameToChinese[countryName];
+                const countryTrimmed = country.trim();
+                const countryUpper = countryTrimmed.toUpperCase();
+                if (countryNameToChinese[countryTrimmed]) {
+                    chineseCountry = countryNameToChinese[countryTrimmed];
+                } else if (regionCodeToChinese[countryUpper]) {
+                    chineseCountry = regionCodeToChinese[countryUpper];
                 }
             }
 
-            // 构建别名部分 - 按照需求1的顺序：城市/地区码，下载速度，端口，国家
+            // 构建别名部分，遵循规则：
+            // - 如果存在城市： 城市 - （可选速度） - 端口 - 国家 - IP
+            // - 否则（只有国家/地区）： 国家/地区 - （可选速度） - 端口 - IP
             const parts = [];
 
-            // 1. 城市或地区码（优先地区码，然后城市）
-            if (chineseRegion && chineseRegion.trim()) {
-                parts.push(chineseRegion.trim());
-            } else if (chineseCity && chineseCity.trim()) {
+            const hasCity = !!(chineseCity && chineseCity.trim());
+            const hasCountry = !!(chineseCountry && chineseCountry.trim());
+
+            if (hasCity) {
                 parts.push(chineseCity.trim());
-            }
-
-            // 2. 下载速度（如果有）
-            if (speed && speed.trim()) {
-                // 提取数字部分
-                const speedMatch = speed.match(/(\d+(\.\d+)?)/);
-                if (speedMatch) {
-                    parts.push(`${speedMatch[1]}MB/s`);
-                }
-            }
-
-            // 3. 端口
-            parts.push(port.toString());
-
-            // 4. 国家（如果有）
-            if (chineseCountry && chineseCountry.trim()) {
+            } else if (chineseRegion && chineseRegion.trim()) {
+                parts.push(chineseRegion.trim());
+            } else if (hasCountry) {
                 parts.push(chineseCountry.trim());
             }
 
-            // 确定地区key用于分组
+            // 下载速度（如果有）
+            if (speed && speed.trim()) {
+                const speedMatch = speed.match(/(\d+(\.\d+)?)/);
+                if (speedMatch) parts.push(`${speedMatch[1]}MB/s`);
+            }
+
+            // 端口
+            parts.push(port.toString());
+
+            // 若有城市，则在端口后加入国家（若存在）
+            // 但如果国家是中国或新加坡且已有城市/地区名，则不显示国家名
+            if (hasCity && hasCountry) {
+                const shouldSkipCountry = (chineseCountry === '中国' || chineseCountry === '新加坡') &&
+                    (hasCity || (chineseRegion && chineseRegion.trim()));
+                if (!shouldSkipCountry) {
+                    parts.push(chineseCountry.trim());
+                }
+            }
+
+            // 确定地区key用于分组（优先城市、地区、国家）
             let regionKey = '';
-            if (chineseRegion && chineseRegion.trim()) {
-                regionKey = chineseRegion.trim();
-            } else if (chineseCity && chineseCity.trim()) {
-                regionKey = chineseCity.trim();
-            } else if (chineseCountry && chineseCountry.trim()) {
-                regionKey = chineseCountry.trim();
-            } else {
-                // 如果CSV中没有任何地区信息，使用IP检测的地区
-                const detectedLocation = getLocation(ip);
+            if (chineseCity && chineseCity.trim()) regionKey = chineseCity.trim();
+            else if (chineseRegion && chineseRegion.trim()) regionKey = chineseRegion.trim();
+            else if (chineseCountry && chineseCountry.trim()) regionKey = chineseCountry.trim();
+            else {
+                const detectedLocation = await getLocation(ip);
                 regionKey = detectedLocation !== '未知' ? detectedLocation : config.prefix;
             }
 
-            // 如果没有任何信息，使用IP检测的地区
-            if (parts.length === 0) {
-                const detectedLocation = getLocation(ip);
+            // 如果parts只有端口等异常情况，回退到IP检测
+            if (parts.length === 0 || parts.length === 1) {
+                const detectedLocation = await getLocation(ip);
+                parts.length = 0;
                 parts.push(detectedLocation !== '未知' ? detectedLocation : config.prefix);
                 parts.push(port.toString());
                 parts.push(ip);
                 regionKey = detectedLocation !== '未知' ? detectedLocation : config.prefix;
             }
+
+            // 最终补上IP（如果尚未加入）
+            if (parts[parts.length - 1] !== ip) parts.push(ip);
 
             return {
                 remark: parts.join('-'),
@@ -2694,15 +2729,15 @@
 
         // 解析粘贴文本 - 修复：使用新的别名生成逻辑
         // 解析粘贴文本 - 修复别名生成逻辑，按照需求2生成别名
-        function parsePasteText(text, config) {
+        async function parsePasteText(text, config) {
             const ipPortPairs = smartSplitIPPort(text);
             const nodes = [];
             const regionGroups = {};
 
-            ipPortPairs.forEach(pair => {
+            for (const pair of ipPortPairs) {
                 const { ip, port } = pair;
 
-                if (!ip) return;
+                if (!ip) continue;
 
                 // 强制使用443端口（如果勾选了此选项）
                 let finalPort = port;
@@ -2714,8 +2749,8 @@
                     finalPort = config.defaultPort;
                 }
 
-                // 使用IP检测获取地区信息
-                const location = getLocation(ip);
+                // 使用IP检测获取地区信息（等待异步结果）
+                const location = await getLocation(ip);
                 const regionName = location !== '未知' ? location : config.prefix;
 
                 // 初始化地区组
@@ -2742,7 +2777,7 @@
 
                 // 增加计数器
                 regionGroups[regionName].counter++;
-            });
+            }
 
             // 生成所有节点
             Object.keys(regionGroups).forEach(regionName => {
@@ -2869,7 +2904,7 @@
                 `fp=${config.fp}`,
                 'type=ws',
                 `host=${encodeURIComponent(config.host)}`,
-                'path=%2F',
+                'path=%2F%3Fed%3D2048',
                 'alpn=h2%2Chttp%2F1.1',
                 'flow='
             ];
@@ -3694,7 +3729,7 @@
             return null;
         }
 
-        function mergeAndShow() {
+        async function mergeAndShow() {
             const all = [...data.vlessLinks, ...data.remoteNodes];
             const seen = new Set();
             data.uniqueNodes = [];
@@ -3773,10 +3808,10 @@
                     }
                 });
 
-                // 对需要重命名的节点按地区分组
+                // 对需要重命名的节点按地区分组（异步地理位置检测）
                 const regionGroups = {};
-                nodesToRename.forEach(info => {
-                    const regionName = getLocation(info.ip);
+                for (const info of nodesToRename) {
+                    const regionName = await getLocation(info.ip);
                     const finalRegion = regionName !== '未知' ? regionName : config.prefix;
 
                     if (!regionGroups[finalRegion]) {
@@ -3792,7 +3827,7 @@
                         config: config,
                         sequence: regionGroups[finalRegion].counter++
                     });
-                });
+                }
 
                 // 生成重命名后的节点
                 const renamedNodes = [];
@@ -4676,11 +4711,11 @@
 
                 // 根据类型设置不同时间
                 if (type === 'success') {
-                    timeoutDuration = 3000; // 成功通知显示3秒
+                    timeoutDuration = 2000; // 成功通知显示2秒
                 } else if (type === 'info') {
-                    timeoutDuration = 4000; // 信息通知显示4秒
+                    timeoutDuration = 3000; // 信息通知显示3秒
                 } else if (type === 'warning') {
-                    timeoutDuration = 8000; // 警告通知显示8秒
+                    timeoutDuration = 6000; // 警告通知显示6秒
                 }
 
                 setTimeout(() => {
@@ -4689,7 +4724,7 @@
             } else {
                 setTimeout(() => {
                     closeNotification(notificationId);
-                }, 15000); // 错误通知显示15秒
+                }, 10000); // 错误通知显示10秒
             }
         }
 
@@ -4775,10 +4810,10 @@
 
             if (logSection.classList.contains('show')) {
                 logSection.classList.remove('show');
-                toggleBtn.innerHTML = '<span>📋</span> 收起日志';
+                toggleBtn.innerHTML = '<span>📋</span> 展开日志';
             } else {
                 logSection.classList.add('show');
-                toggleBtn.innerHTML = '<span>📋</span> 展开日志';
+                toggleBtn.innerHTML = '<span>📋</span> 收起日志';
             }
         }
 
@@ -5107,12 +5142,11 @@
             })();
         }
         /**
-         * 获取IP地址对应的国家/地区名称
+         * 自定义获取IP地址对应的国家/地区名称
          * @param {string} ip - IPv4地址
          * @returns {string} - 国家/地区名称或地区范围
          */
         function getLocation(ip) {
-            // 使用 window.IPGeolocationService.getIPLocation 函数获取IP地址对应的国家/地区名称
             return window.IPGeolocationService.getIPLocation(ip);
         }
 
