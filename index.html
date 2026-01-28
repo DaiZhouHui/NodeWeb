@@ -80,8 +80,8 @@
                                 <div class="file-upload-area" id="dropArea">
                                     <div class="upload-icon">📁</div>
                                     <p><strong>拖放CSV文件到此处，或点击选择</strong></p>
-                                    <small>支持.csv或.txt文件格式</small>
-                                    <input type="file" id="fileInput" accept=".csv,.txt">
+                                    <small>支持.csv或.txt文件格式（可多选）</small>
+                                    <input type="file" id="fileInput" accept=".csv,.txt" multiple>
                                 </div>
 
                                 <div id="fileInfo" class="file-info">
@@ -893,6 +893,7 @@
             mergedYamlContent: '',   // 合并生成的YAML
             remoteNodes: [],
             uniqueNodes: [],
+            uploadedFiles: [],       // 新增：已上传的文件列表
             nodeSha: null,
             plainSha: null,
             optimalSha: null, // 新增：优选订阅文件的sha
@@ -1185,7 +1186,7 @@
         }
 
         function initEvents() {
-            document.getElementById('fileInput').addEventListener('change', e => e.target.files[0] && handleFile(e.target.files[0]));
+            document.getElementById('fileInput').addEventListener('change', e => e.target.files && e.target.files.length > 0 && handleFiles(Array.from(e.target.files)));
             document.getElementById('removeFileBtn').addEventListener('click', removeFile);
             document.getElementById('generateBtn').addEventListener('click', generateVless);
             document.getElementById('copyVlessBtn').addEventListener('click', () => copyText(data.vlessLinks.join('\n')));
@@ -1626,17 +1627,125 @@
                 });
             });
 
-            // 修复：正确处理drop事件
+            // 修复：正确处理drop事件，支持多个文件
             area.addEventListener('drop', e => {
                 e.preventDefault();
                 e.stopPropagation();
-                const files = e.dataTransfer.files;
+                const files = Array.from(e.dataTransfer.files).filter(f => /\.(csv|txt)$/i.test(f.name));
                 if (files && files.length > 0) {
-                    handleFile(files[0]);
+                    handleFiles(files);
                 }
             });
 
             area.addEventListener('click', () => document.getElementById('fileInput').click());
+        }
+
+        // 新增：处理多个文件的函数
+        async function handleFiles(files) {
+            // 筛选有效的CSV/TXT文件
+            const validFiles = files.filter(f => /\.(csv|txt)$/i.test(f.name));
+
+            if (validFiles.length === 0) {
+                showNotification('文件错误', '请上传CSV或TXT文件', 'error');
+                addLog('文件操作', '未找到有效的CSV/TXT文件', 'error');
+                return;
+            }
+
+            // 存储已上传的文件列表
+            if (!data.uploadedFiles) {
+                data.uploadedFiles = [];
+            }
+            data.uploadedFiles = validFiles;
+
+            // 更新UI显示已上传文件信息
+            const fileNameEl = document.getElementById('fileName');
+            const fileSizeEl = document.getElementById('fileSize');
+
+            if (validFiles.length === 1) {
+                fileNameEl.textContent = validFiles[0].name;
+                fileSizeEl.textContent = formatSize(validFiles[0].size);
+            } else {
+                const totalSize = validFiles.reduce((sum, f) => sum + f.size, 0);
+                fileNameEl.textContent = `已上传 ${validFiles.length} 个文件`;
+                fileSizeEl.textContent = `(总大小: ${formatSize(totalSize)})`;
+            }
+
+            document.getElementById('fileInfo').classList.add('show');
+            document.getElementById('csvInput').value = '';
+            data.currentSource = 'file';
+            updateSourceBadge();
+            updateCSVInputState();
+
+            // 读取所有文件并合并内容
+            let combinedContent = '';
+            let fileCount = 0;
+            let errorCount = 0;
+            let headerLine = ''; // 存储第一个有效的header行
+
+            for (const file of validFiles) {
+                try {
+                    const content = await readFileAsText(file);
+                    const lines = content.split(/\r?\n/);
+
+                    if (lines.length === 0) continue;
+
+                    if (!combinedContent) {
+                        // 第一个文件：完整保留
+                        combinedContent = content;
+                        headerLine = lines[0]; // 保存header行
+                    } else {
+                        // 后续文件：尝试移除header行，但保留所有数据行
+                        // 通过检查第一行是否看起来像header来决定是否跳过
+                        let skipFirstLine = false;
+                        if (lines.length > 1) {
+                            const firstLine = lines[0].toLowerCase();
+                            // 检查是否看起来像header（包含IP、port、city等关键词）
+                            const headerKeywords = ['ip', 'host', 'address', 'port', 'city', 'country', 'region', 'speed', '地址', '端口', '城市', '国家', '地区', '速度'];
+                            const keywordCount = headerKeywords.filter(kw => firstLine.includes(kw)).length;
+                            if (keywordCount >= 1) {
+                                skipFirstLine = true;
+                            }
+                        }
+
+                        // 添加非header的行
+                        const dataLinesToAdd = skipFirstLine ? lines.slice(1) : lines;
+                        if (dataLinesToAdd.length > 0) {
+                            combinedContent += '\n' + dataLinesToAdd.join('\n');
+                        }
+                    }
+                    fileCount++;
+                } catch (e) {
+                    errorCount++;
+                    addLog('文件操作', `文件读取失败: ${file.name}`, 'error');
+                }
+            }
+
+            // 将合并的内容设置到csvInput（用于解析）
+            document.getElementById('csvInput').value = combinedContent;
+
+            // 进行列检测
+            autoDetectCSVColumns();
+
+            // 自动生成节点
+            setTimeout(() => {
+                generateVless();
+            }, 100);
+
+            const message = validFiles.length === 1
+                ? `成功上传文件: ${validFiles[0].name}`
+                : `成功上传 ${fileCount} 个文件${errorCount > 0 ? `，${errorCount} 个失败` : ''}`;
+            addLog('文件操作', message, 'success');
+            showNotification('上传成功', message, 'success');
+        }
+
+        // 新增：异步读取文件为文本
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(e);
+                reader.readAsText(file);
+            });
         }
 
         function handleFile(file) {
@@ -1681,6 +1790,7 @@
 
         function removeFile() {
             data.currentSource = 'none';
+            data.uploadedFiles = []; // 清除已上传文件列表
             document.getElementById('fileInfo').classList.remove('show');
             document.getElementById('fileInput').value = '';
             document.getElementById('fileName').textContent = '';
@@ -1714,7 +1824,12 @@
 
         function updateSourceBadge() {
             const badge = document.getElementById('sourceBadge');
-            badge.textContent = data.currentSource === 'file' ? '已上传文件' : '粘贴内容';
+            if (data.currentSource === 'file') {
+                const fileCount = data.uploadedFiles ? data.uploadedFiles.length : 1;
+                badge.textContent = fileCount > 1 ? `已上传${fileCount}个文件` : '已上传文件';
+            } else {
+                badge.textContent = '粘贴内容';
+            }
         }
 
         // 新增：智能检测CSV列功能 - 修复：准确检测速度列和端口列
@@ -2297,22 +2412,13 @@
                 const config = getConfig();
 
                 let text = '';
-                if (data.currentSource === 'file') {
-                    const fileInput = document.getElementById('fileInput');
-                    if (!fileInput.files || fileInput.files.length === 0) {
-                        showNotification('生成节点失败', '请先上传CSV文件或粘贴内容', 'error');
-                        showLoading(false, 'generateBtn');
-                        return;
-                    }
-                    const file = fileInput.files[0];
-                    text = await readFile(file);
-                } else {
-                    text = document.getElementById('csvInput').value.trim();
-                    if (!text) {
-                        showNotification('生成节点失败', '请提供CSV数据，可以上传文件或粘贴内容', 'error');
-                        showLoading(false, 'generateBtn');
-                        return;
-                    }
+                // 无论是上传文件还是粘贴内容，都从csvInput获取（因为handleFiles已经将合并后的内容放入了csvInput）
+                text = document.getElementById('csvInput').value.trim();
+
+                if (!text) {
+                    showNotification('生成节点失败', '请提供CSV数据，可以上传文件或粘贴内容', 'error');
+                    showLoading(false, 'generateBtn');
+                    return;
                 }
 
                 data.vlessLinks = await parseAndGenerate(text, config);
@@ -2416,33 +2522,76 @@
                 try {
                     const row = parseCSVLine(line);
 
-                    // 获取IP和端口
+                    // 获取IP和端口 - 改进：先从配置的列提取，如果失败则自动扫描行中的IP和端口
                     let ip = '';
                     let port = config.defaultPort;
+                    let foundIP = false;
 
-                    // 从指定列获取IP
+                    // 优先从指定列获取IP
                     if (config.ipColumn >= 0 && config.ipColumn < row.length) {
-                        ip = row[config.ipColumn].trim();
-                        // 如果IP包含端口，分割出来
-                        if (ip.includes(':')) {
-                            const parts = ip.split(':');
-                            ip = parts[0];
-                            if (parts.length > 1) {
-                                const portStr = parts[1];
-                                if (portStr && /^\d{1,5}$/.test(portStr)) {
-                                    port = parseInt(portStr) || config.defaultPort;
+                        const cellValue = row[config.ipColumn].trim();
+                        if (isValidIP(cellValue) || cellValue.includes(':')) {
+                            ip = cellValue;
+                            foundIP = true;
+                        }
+                    }
+
+                    // 如果从指定列没有找到有效IP，则自动扫描行中的所有单元格查找IP
+                    if (!foundIP) {
+                        for (let j = 0; j < row.length; j++) {
+                            const cellValue = row[j].trim();
+                            if (isValidIP(cellValue)) {
+                                ip = cellValue;
+                                foundIP = true;
+                                break;
+                            }
+                            // 检查是否是IP:端口格式
+                            if (cellValue.includes(':') && cellValue.split(':').length === 2) {
+                                const parts = cellValue.split(':');
+                                if (isValidIP(parts[0])) {
+                                    ip = cellValue;
+                                    foundIP = true;
+                                    break;
                                 }
                             }
                         }
                     }
 
-                    // 从指定列获取端口
+                    // 处理IP中包含的端口
+                    if (ip.includes(':')) {
+                        const parts = ip.split(':');
+                        ip = parts[0];
+                        if (parts.length > 1) {
+                            const portStr = parts[1];
+                            if (portStr && /^\d{1,5}$/.test(portStr)) {
+                                port = parseInt(portStr) || config.defaultPort;
+                            }
+                        }
+                    }
+
+                    // 优先从指定列获取端口
                     if (config.portColumn >= 0 && config.portColumn < row.length) {
                         const portStr = row[config.portColumn].trim();
                         if (portStr && /^\d{1,5}$/.test(portStr)) {
                             const parsedPort = parseInt(portStr);
                             if (parsedPort >= 1 && parsedPort <= 65535) {
                                 port = parsedPort;
+                            }
+                        }
+                    } else if (!foundIP || port === config.defaultPort) {
+                        // 如果还没有找到端口，或者没有通过ipColumn找到IP，则自动扫描行中的所有单元格查找端口
+                        for (let j = 0; j < row.length; j++) {
+                            const cellValue = row[j].trim();
+                            if (/^\d{1,5}$/.test(cellValue)) {
+                                const parsedPort = parseInt(cellValue);
+                                if (parsedPort >= 1 && parsedPort <= 65535) {
+                                    // 检查这个数字是否看起来像端口（常见端口或在合理范围内）
+                                    const commonPorts = [80, 443, 8080, 8443, 22, 21, 25, 53, 3306, 5432, 6379, 27017, 2087, 2053, 2083, 8443];
+                                    if (commonPorts.includes(parsedPort) || parsedPort > 1024) {
+                                        port = parsedPort;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -2463,8 +2612,22 @@
                     let region = '';
                     let speed = '';
 
+                    // 从指定列获取各字段 - 改进：如果指定列无效则尝试自动查找
                     if (config.cityColumn >= 0 && config.cityColumn < row.length) {
                         city = row[config.cityColumn].trim();
+                    } else {
+                        // 自动查找城市列：查找非IP、非端口的文本单元格
+                        for (let j = 0; j < row.length; j++) {
+                            const cellValue = row[j].trim();
+                            // 跳过IP和端口
+                            if (isValidIP(cellValue) || cellValue.includes(':') && isValidIP(cellValue.split(':')[0])) continue;
+                            if (/^\d{1,5}$/.test(cellValue) && parseInt(cellValue) >= 1 && parseInt(cellValue) <= 65535) continue;
+                            // 如果找到文本，认为是城市
+                            if (cellValue && !/^[\d\-\.]+$/.test(cellValue) && !isSpeedValue(cellValue) && !isDelayValue(cellValue)) {
+                                city = cellValue;
+                                break;
+                            }
+                        }
                     }
 
                     if (config.countryColumn >= 0 && config.countryColumn < row.length) {
@@ -2481,6 +2644,18 @@
                         const speedMatch = speed.match(/(\d+(\.\d+)?)/);
                         if (speedMatch) {
                             speed = `${speedMatch[1]}MB/s`;
+                        }
+                    } else {
+                        // 自动查找速度列
+                        for (let j = 0; j < row.length; j++) {
+                            const cellValue = row[j].trim();
+                            if (isSpeedValue(cellValue)) {
+                                const speedMatch = cellValue.match(/(\d+(\.\d+)?)/);
+                                if (speedMatch) {
+                                    speed = `${speedMatch[1]}MB/s`;
+                                }
+                                break;
+                            }
                         }
                     }
 
