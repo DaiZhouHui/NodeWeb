@@ -71,6 +71,8 @@ def download_and_extract():
                     os.path.join(csv_dir, "GeoLite2-Country-Blocks-IPv4.csv"),
                     os.path.join(csv_dir, "GeoLite2-Country-Locations-zh-CN.csv")
                 )
+        # 如果没有找到匹配的目录，抛出异常
+        raise Exception("未找到GeoLite2-Country-CSV_目录")
     except Exception as e:
         print(f"    ❌ 失败: {e}")
         raise Exception(f"下载或解压失败: {e}")
