@@ -271,7 +271,8 @@
                             <div class="config-row">
                                 <div class="form-group">
                                     <label>用户ID (UUID)</label>
-                                    <input type="text" id="uuid" value="471a8e64-7b21-4703-b1d1-45a221098459" readonly>
+                                    <!-- 已去除readonly，改为可手动修改 -->
+                                    <input type="text" id="uuid" value="471a8e64-7b21-4703-b1d1-45a221098459">
                                 </div>
 
                                 <div class="form-group">
@@ -2446,7 +2447,7 @@
 
         function getConfig() {
             return {
-                uuid: "471a8e64-7b21-4703-b1d1-45a221098459",
+                uuid: document.getElementById('uuid').value.trim() || "471a8e64-7b21-4703-b1d1-45a221098459",
                 host: document.getElementById('host').value.trim() || "knny.dpdns.org",
                 sni: document.getElementById('sni').value.trim() || "knny.dpdns.org",
                 fp: document.getElementById('fp').value.trim() || "chrome",
@@ -3051,6 +3052,7 @@
             return result;
         }
 
+        // 【核心修改】生成Vless链接，格式符合要求：alpn=h3%2Ch2%2Chttp%2F1.1，增加insecure和allowInsecure，移除flow
         function generateLink(ip, port, config, remark) {
             // 读取自定义Path参数，默认为 /?ed=2048
             const customPath = document.getElementById('customPath') ? document.getElementById('customPath').value.trim() : '/?ed=2048';
@@ -3060,11 +3062,12 @@
                 'security=tls',
                 `sni=${encodeURIComponent(config.sni)}`,
                 `fp=${config.fp}`,
+                'alpn=h3%2Ch2%2Chttp%2F1.1',
+                'insecure=0',
+                'allowInsecure=0',
                 'type=ws',
                 `host=${encodeURIComponent(config.host)}`,
-                `path=${encodedPath}`,
-                'alpn=h2%2Chttp%2F1.1',
-                'flow='
+                `path=${encodedPath}`
             ];
             return `vless://${config.uuid}@${ip}:${port}?${params.join('&')}#${encodeURIComponent(remark)}`;
         }
