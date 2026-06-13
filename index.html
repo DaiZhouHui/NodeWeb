@@ -320,6 +320,9 @@
                         <span>📊</span>
                         生成结果（节点汇总）
                         <span id="resultCount" class="badge">0节点</span>
+                        <button id="previewNodesBtn" class="btn btn-info" style="padding: 4px 12px; font-size: 13px; margin-left: 10px; vertical-align: middle;">
+                            <span>👁️</span> 预览节点
+                        </button>
                     </h2>
                 </div>
                 <div class="card-body">
@@ -558,7 +561,9 @@
                                     </div>
                                     <div class="help-text">将删除 GitHub 仓库中对应的文件及同名的 .yaml 文件，请谨慎操作。<a
                                             href="https://github.com/DaiZhouHui/CustomNode"
-                                            target="_blank">访问CustomNode</a></div>
+                                            target="_blank">访问CustomNode仓库</a> | <a
+                                            href="https://github.com/DaiZhouHui/NodeWeb"
+                                            target="_blank">访问NodeWeb生成页</a></div>
                                 </div>
                             </div>
 
@@ -1198,6 +1203,7 @@
             document.getElementById('fileInput').addEventListener('change', e => e.target.files && e.target.files.length > 0 && handleFiles(Array.from(e.target.files)));
             document.getElementById('removeFileBtn').addEventListener('click', removeFile);
             document.getElementById('generateBtn').addEventListener('click', generateVless);
+            document.getElementById('previewNodesBtn').addEventListener('click', showNodePreview);
             document.getElementById('copyVlessBtn').addEventListener('click', () => copyText(data.vlessLinks.join('\n')));
             // 移除downloadVlessBtn事件监听，只保留downloadAllBtn
             document.getElementById('downloadAllBtn').addEventListener('click', downloadAll);
@@ -1908,7 +1914,7 @@
                 // 检查第一行是否是数据（包含IP或数字）
                 for (let cell of firstRow) {
                     const cellStr = cell.toString().trim();
-                    if (isValidIP(cellStr) || /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cellStr)) {
+                    if (isValidIP(cellStr) || isValidIPv6(cellStr) || isValidDomain(cellStr) || /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cellStr)) {
                         firstRowIsLikelyData = true;
                         break;
                     }
@@ -1945,6 +1951,8 @@
                 const columnCount = Math.max(...dataRows.map(row => row.length));
                 const columnStats = new Array(columnCount).fill().map(() => ({
                     ipCount: 0,
+                    ipv6Count: 0,
+                    domainCount: 0,
                     portCount: 0,
                     speedCount: 0,
                     delayCount: 0,
@@ -1963,6 +1971,14 @@
 
                         if (isValidIP(cell)) {
                             columnStats[i].ipCount++;
+                        }
+                        // 新增：检测IPv6
+                        else if (isValidIPv6(cell)) {
+                            columnStats[i].ipv6Count++;
+                        }
+                        // 新增：检测域名
+                        else if (isValidDomain(cell)) {
+                            columnStats[i].domainCount++;
                         }
                         // 检测端口（1-65535的整数）
                         else if (/^\d{1,5}$/.test(cell)) {
@@ -1990,11 +2006,12 @@
                     }
                 }
 
-                // 检测IP列
+                // 检测IP列（包含IPv4、IPv6和域名）
                 let ipColumn = 0;
                 let maxIpScore = 0;
                 for (let i = 0; i < columnStats.length; i++) {
-                    const ipScore = columnStats[i].ipCount / Math.max(1, columnStats[i].total);
+                    const addressCount = columnStats[i].ipCount + columnStats[i].ipv6Count + columnStats[i].domainCount;
+                    const ipScore = addressCount / Math.max(1, columnStats[i].total);
                     if (ipScore > maxIpScore) {
                         maxIpScore = ipScore;
                         ipColumn = i;
@@ -2511,7 +2528,7 @@
                     // 优先从指定列获取IP
                     if (config.ipColumn >= 0 && config.ipColumn < row.length) {
                         const cellValue = row[config.ipColumn].trim();
-                        if (isValidIP(cellValue) || cellValue.includes(':')) {
+                        if (isValidAddress(cellValue) || cellValue.includes(':')) {
                             ip = cellValue;
                             foundIP = true;
                         }
@@ -2521,15 +2538,25 @@
                     if (!foundIP) {
                         for (let j = 0; j < row.length; j++) {
                             const cellValue = row[j].trim();
-                            if (isValidIP(cellValue)) {
+                            if (isValidAddress(cellValue)) {
                                 ip = cellValue;
                                 foundIP = true;
                                 break;
                             }
-                            // 检查是否是IP:端口格式
+                            // 新增：检查是否是方括号IPv6:端口格式 [::1]:443
+                            if (cellValue.startsWith('[') && cellValue.includes(']:')) {
+                                const closeBracket = cellValue.indexOf(']');
+                                const addr = cellValue.substring(1, closeBracket);
+                                if (isValidIPv6(addr)) {
+                                    ip = addr;
+                                    foundIP = true;
+                                    break;
+                                }
+                            }
+                            // 检查是否是IP:端口格式（仅IPv4或域名）
                             if (cellValue.includes(':') && cellValue.split(':').length === 2) {
                                 const parts = cellValue.split(':');
-                                if (isValidIP(parts[0])) {
+                                if (isValidAddress(parts[0]) && !isValidIPv6(parts[0])) {
                                     ip = cellValue;
                                     foundIP = true;
                                     break;
@@ -2538,8 +2565,8 @@
                         }
                     }
 
-                    // 处理IP中包含的端口
-                    if (ip.includes(':')) {
+                    // 处理IP中包含的端口（仅IPv4或域名的 ip:port 格式，IPv6已经单独处理）
+                    if (!isValidIPv6(ip) && ip.includes(':')) {
                         const parts = ip.split(':');
                         ip = parts[0];
                         if (parts.length > 1) {
@@ -2577,8 +2604,8 @@
                         }
                     }
 
-                    // 验证IP有效性
-                    if (!isValidIP(ip)) {
+                    // 验证地址有效性（支持IPv4/IPv6/域名）
+                    if (!isValidAddress(ip)) {
                         continue;
                     }
 
@@ -2601,7 +2628,7 @@
                         for (let j = 0; j < row.length; j++) {
                             const cellValue = row[j].trim();
                             // 跳过IP和端口
-                            if (isValidIP(cellValue) || cellValue.includes(':') && isValidIP(cellValue.split(':')[0])) continue;
+                            if (isValidAddress(cellValue) || cellValue.includes(':') && isValidAddress(cellValue.split(':')[0])) continue;
                             if (/^\d{1,5}$/.test(cellValue) && parseInt(cellValue) >= 1 && parseInt(cellValue) <= 65535) continue;
                             // 如果找到文本，认为是城市
                             if (cellValue && !/^[\d\-\.]+$/.test(cellValue) && !isSpeedValue(cellValue) && !isDelayValue(cellValue)) {
@@ -2694,10 +2721,17 @@
                         }
                     }
 
-                    // 如果没有从CSV获取到地区信息，使用IP检测（等待异步结果）
+                    // 如果没有从CSV获取到地区信息，使用IP检测（IPv6和域名使用默认名称）
                     if (!regionNameForGroup) {
-                        const detectedLocation = await getLocationCached(ip);
-                        regionNameForGroup = detectedLocation !== '未知' ? detectedLocation : config.prefix;
+                        const addrType = getAddressType(ip);
+                        if (addrType === 'ipv6') {
+                            regionNameForGroup = 'IPv6节点';
+                        } else if (addrType === 'domain') {
+                            regionNameForGroup = '域名节点';
+                        } else {
+                            const detectedLocation = await getLocationCached(ip);
+                            regionNameForGroup = detectedLocation !== '未知' ? detectedLocation : config.prefix;
+                        }
                     }
 
                     // 初始化地区组
@@ -2739,8 +2773,8 @@
                         }
                     }
 
-                    // 5. IP地址
-                    aliasParts.push(ip);
+                    // 5. IP地址（IPv6长地址会自动缩短）
+                    aliasParts.push(shortenAddressForAlias(ip));
 
                     // 用"-"连接所有部分
                     const remark = aliasParts.join('-');
@@ -2860,22 +2894,38 @@
             else if (chineseRegion && chineseRegion.trim()) regionKey = chineseRegion.trim();
             else if (chineseCountry && chineseCountry.trim()) regionKey = chineseCountry.trim();
             else {
-                const detectedLocation = await getLocationCached(ip);
-                regionKey = detectedLocation !== '未知' ? detectedLocation : config.prefix;
+                const addrType = getAddressType(ip);
+                if (addrType === 'ipv6') {
+                    regionKey = 'IPv6节点';
+                } else if (addrType === 'domain') {
+                    regionKey = '域名节点';
+                } else {
+                    const detectedLocation = await getLocationCached(ip);
+                    regionKey = detectedLocation !== '未知' ? detectedLocation : config.prefix;
+                }
             }
 
             // 如果parts只有端口等异常情况，回退到IP检测
             if (parts.length === 0 || parts.length === 1) {
-                const detectedLocation = await getLocationCached(ip);
+                const addrType2 = getAddressType(ip);
                 parts.length = 0;
-                parts.push(detectedLocation !== '未知' ? detectedLocation : config.prefix);
+                if (addrType2 === 'ipv6') {
+                    parts.push('IPv6节点');
+                    regionKey = 'IPv6节点';
+                } else if (addrType2 === 'domain') {
+                    parts.push('域名节点');
+                    regionKey = '域名节点';
+                } else {
+                    const detectedLocation = await getLocationCached(ip);
+                    parts.push(detectedLocation !== '未知' ? detectedLocation : config.prefix);
+                    regionKey = detectedLocation !== '未知' ? detectedLocation : config.prefix;
+                }
                 parts.push(port.toString());
-                parts.push(ip);
-                regionKey = detectedLocation !== '未知' ? detectedLocation : config.prefix;
+                parts.push(shortenAddressForAlias(ip));
             }
 
             // 最终补上IP（如果尚未加入）
-            if (parts[parts.length - 1] !== ip) parts.push(ip);
+            if (parts[parts.length - 1] !== shortenAddressForAlias(ip)) parts.push(shortenAddressForAlias(ip));
 
             return {
                 remark: parts.join('-'),
@@ -2905,9 +2955,17 @@
                     finalPort = config.defaultPort;
                 }
 
-                // 使用IP检测获取地区信息（等待异步结果）
-                const location = await getLocation(ip);
-                const regionName = location !== '未知' ? location : config.prefix;
+                // 使用IP检测获取地区信息（IPv6和域名不使用数据库查询）
+                const addrType = getAddressType(ip);
+                let regionName;
+                if (addrType === 'ipv6') {
+                    regionName = 'IPv6节点';
+                } else if (addrType === 'domain') {
+                    regionName = '域名节点';
+                } else {
+                    const location = await getLocation(ip);
+                    regionName = location !== '未知' ? location : config.prefix;
+                }
 
                 // 初始化地区组
                 if (!regionGroups[regionName]) {
@@ -2920,8 +2978,8 @@
                 // 为当前节点生成序号
                 const sequence = regionGroups[regionName].counter.toString().padStart(2, '0');
 
-                // 生成别名：地区名序号-端口-IP（如：香港01-443-127.0.0.1）
-                const remark = `${regionName}${sequence}-${finalPort}-${ip}`;
+                // 生成别名：地区名序号-端口-地址
+                const remark = `${regionName}${sequence}-${finalPort}-${shortenAddressForAlias(ip)}`;
 
                 // 保存节点信息
                 regionGroups[regionName].nodes.push({
@@ -2978,6 +3036,37 @@
                 }
             }
 
+            // 新增：匹配方括号包裹的IPv6地址（[::1]:443 或 [2606:4700:9a62::e08f:d766]:443）
+            const bracketedIPv6Pattern = /\[([0-9a-fA-F:]+)\](?:\s*[:,\s]\s*(\d{1,5}))?/g;
+            while ((match = bracketedIPv6Pattern.exec(text)) !== null) {
+                const ip = match[1];
+                const port = match[2] ? parseInt(match[2]) : null;
+                if (port !== null && (port < 1 || port > 65535)) continue;
+                if (!isValidIPv6(ip)) continue;
+                const key = `${ip}:${port || 'default'}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    result.push({ ip, port });
+                }
+            }
+
+            // 新增：匹配域名:端口格式（cdn.2158.cc:443 或 cdn.2158.cc 443）
+            const domainPortPattern = /([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\s*[:,\s]\s*(\d{1,5})/g;
+            while ((match = domainPortPattern.exec(text)) !== null) {
+                const fullMatch = match[0];
+                const sepMatch = fullMatch.match(/\s*[:,\s]\s*(\d{1,5})$/);
+                if (!sepMatch) continue;
+                const domain = fullMatch.substring(0, fullMatch.length - sepMatch[0].length);
+                const port = parseInt(sepMatch[1]);
+                if (port < 1 || port > 65535) continue;
+                if (!isValidDomain(domain)) continue;
+                const key = `${domain}:${port}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    result.push({ ip: domain, port });
+                }
+            }
+
             // 如果没有匹配到IP:端口格式，尝试其他格式
             if (result.length === 0) {
                 // 分割文本成单词
@@ -2986,7 +3075,7 @@
                 for (let i = 0; i < words.length; i++) {
                     const word = words[i].trim();
 
-                    // 检查是否是IP地址
+                    // 检查是否是IP地址（IPv4）
                     if (isValidIP(word)) {
                         const ip = word;
                         let port = null;
@@ -3006,6 +3095,42 @@
                         if (!seen.has(key)) {
                             seen.add(key);
                             result.push({ ip, port });
+                        }
+                    }
+                    // 新增：检查是否是IPv6地址
+                    else if (isValidIPv6(word)) {
+                        const ip = word;
+                        let port = null;
+                        if (i + 1 < words.length) {
+                            const nextWord = words[i + 1];
+                            const possiblePort = parseInt(nextWord);
+                            if (!isNaN(possiblePort) && possiblePort >= 1 && possiblePort <= 65535) {
+                                port = possiblePort;
+                                i++;
+                            }
+                        }
+                        const key = `${ip}:${port || 'default'}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            result.push({ ip, port });
+                        }
+                    }
+                    // 新增：检查是否是域名
+                    else if (isValidDomain(word)) {
+                        const domain = word;
+                        let port = null;
+                        if (i + 1 < words.length) {
+                            const nextWord = words[i + 1];
+                            const possiblePort = parseInt(nextWord);
+                            if (!isNaN(possiblePort) && possiblePort >= 1 && possiblePort <= 65535) {
+                                port = possiblePort;
+                                i++;
+                            }
+                        }
+                        const key = `${domain}:${port || 'default'}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            result.push({ ip: domain, port });
                         }
                     }
                     // 检查是否是IP:端口格式（已处理过，但这里作为后备）
@@ -3052,8 +3177,10 @@
             return result;
         }
 
-        // 【核心修改】生成Vless链接，格式符合要求：alpn=h3%2Ch2%2Chttp%2F1.1，增加insecure和allowInsecure，移除flow
+        // 生成Vless链接，包含insecure和allowInsecure参数
         function generateLink(ip, port, config, remark) {
+            // IPv6地址需要用方括号包裹
+            const formattedIP = getAddressType(ip) === 'ipv6' ? `[${ip}]` : ip;
             // 读取自定义Path参数，默认为 /?ed=2048
             const customPath = document.getElementById('customPath') ? document.getElementById('customPath').value.trim() : '/?ed=2048';
             const encodedPath = encodeURIComponent(customPath);
@@ -3062,14 +3189,13 @@
                 'security=tls',
                 `sni=${encodeURIComponent(config.sni)}`,
                 `fp=${config.fp}`,
-                'alpn=h3%2Ch2%2Chttp%2F1.1',
                 'insecure=0',
                 'allowInsecure=0',
                 'type=ws',
                 `host=${encodeURIComponent(config.host)}`,
                 `path=${encodedPath}`
             ];
-            return `vless://${config.uuid}@${ip}:${port}?${params.join('&')}#${encodeURIComponent(remark)}`;
+            return `vless://${config.uuid}@${formattedIP}:${port}?${params.join('&')}#${encodeURIComponent(remark)}`;
         }
 
         function displayVlessLinks() {
@@ -3078,6 +3204,113 @@
             el.classList.toggle('empty', data.vlessLinks.length === 0);
             document.getElementById('resultCount').textContent = `${data.vlessLinks.length}节点`;
             document.getElementById('localNodeCount').textContent = `${data.vlessLinks.length}节点`;
+        }
+
+        // 新增：HTML转义辅助函数（防止XSS）
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // 新增：节点预览功能
+        function showNodePreview() {
+            if (data.vlessLinks.length === 0) {
+                showNotification('预览失败', '请先生成节点，当前没有可预览的数据', 'warning');
+                return;
+            }
+
+            // 移除已存在的预览弹窗
+            const existingModal = document.getElementById('previewModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 解析所有vless链接
+            const previewData = [];
+            data.vlessLinks.forEach((link, index) => {
+                const parsed = parseVlessUrl(link);
+                if (parsed) {
+                    const addrType = getAddressType(parsed.server);
+                    previewData.push({
+                        seq: index + 1,
+                        alias: parsed.name || `节点${index + 1}`,
+                        address: parsed.server,
+                        port: parsed.port,
+                        type: addrType || '未知'
+                    });
+                }
+            });
+
+            // 构建表格行
+            const typeLabels = { ipv4: 'IPv4', ipv6: 'IPv6', domain: '域名', '未知': '未知' };
+            const typeColors = { ipv4: '#3b82f6', ipv6: '#8b5cf6', domain: '#10b981', '未知': '#6b7280' };
+
+            let tableRows = '';
+            previewData.forEach(row => {
+                const label = typeLabels[row.type] || row.type;
+                const color = typeColors[row.type] || '#6b7280';
+                tableRows += `
+                    <tr>
+                        <td style="text-align:center;color:#6b7280;">${row.seq}</td>
+                        <td title="${escapeHtml(row.alias)}">${escapeHtml(row.alias.length > 30 ? row.alias.substring(0, 30) + '...' : row.alias)}</td>
+                        <td>
+                            <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${color}20;color:${color};margin-right:6px;">${label}</span>
+                            <code style="font-size:12px;">${escapeHtml(row.address)}</code>
+                        </td>
+                        <td style="text-align:center;font-weight:600;color:#4b5563;">${row.port}</td>
+                    </tr>`;
+            });
+
+            // 创建弹窗
+            const overlay = document.createElement('div');
+            overlay.id = 'previewModal';
+            overlay.className = 'custom-dialog-overlay';
+            overlay.style.zIndex = '2001';
+
+            overlay.innerHTML = `
+                <div class="custom-dialog" style="max-width:900px;min-width:600px;max-height:80vh;display:flex;flex-direction:column;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-shrink:0;">
+                        <div>
+                            <span style="font-size:22px;font-weight:700;color:#2d3748;">👁️ 节点预览</span>
+                            <span style="margin-left:12px;font-size:14px;color:#6b7280;">共 ${previewData.length} 个节点</span>
+                        </div>
+                        <button id="closePreviewBtn" class="custom-dialog-btn custom-dialog-btn-cancel" style="padding:8px 16px;">关闭</button>
+                    </div>
+                    <div style="overflow-y:auto;flex:1;">
+                        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                            <thead>
+                                <tr style="background:#f8fafc;position:sticky;top:0;">
+                                    <th style="padding:10px 8px;text-align:center;border-bottom:2px solid #e2e8f0;color:#64748b;width:50px;">序号</th>
+                                    <th style="padding:10px 8px;text-align:left;border-bottom:2px solid #e2e8f0;color:#64748b;">别名</th>
+                                    <th style="padding:10px 8px;text-align:left;border-bottom:2px solid #e2e8f0;color:#64748b;">地址</th>
+                                    <th style="padding:10px 8px;text-align:center;border-bottom:2px solid #e2e8f0;color:#64748b;width:80px;">端口</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+
+            document.body.appendChild(overlay);
+
+            // 关闭事件
+            const closeModal = () => overlay.remove();
+            document.getElementById('closePreviewBtn').addEventListener('click', closeModal);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal();
+            });
+
+            // ESC键关闭
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
         }
 
         function convertManualToBase64() {
@@ -3996,7 +4229,7 @@
                     regionGroups[regionName].nodes.forEach(node => {
                         const sequence = node.sequence.toString().padStart(2, '0');
                         // 只有IP和端口的情况，使用格式：地区名序号-端口-IP
-                        const remark = `${regionName}${sequence}-${node.port}-${node.ip}`;
+                        const remark = `${regionName}${sequence}-${node.port}-${shortenAddressForAlias(node.ip)}`;
                         renamedNodes.push(generateLink(node.ip, node.port, node.config, remark));
                     });
                 });
@@ -4804,14 +5037,28 @@
                 }
 
                 const uuid = pathParts[0];
-                const serverPort = pathParts[1].split(':');
+                let server, port;
 
-                if (serverPort.length !== 2) {
-                    return null;
+                // 处理方括号包裹的IPv6: [2606:4700:9a62::e08f:d766]:443
+                if (pathParts[1].startsWith('[')) {
+                    const closeBracket = pathParts[1].lastIndexOf(']');
+                    if (closeBracket === -1) return null;
+                    server = pathParts[1].substring(1, closeBracket);
+                    const afterBracket = pathParts[1].substring(closeBracket + 1);
+                    if (afterBracket.startsWith(':')) {
+                        port = parseInt(afterBracket.substring(1));
+                    } else {
+                        return null;
+                    }
+                } else {
+                    // 标准 IPv4 或 域名:端口
+                    const serverPort = pathParts[1].split(':');
+                    if (serverPort.length !== 2) {
+                        return null;
+                    }
+                    server = serverPort[0];
+                    port = parseInt(serverPort[1]);
                 }
-
-                const server = serverPort[0];
-                const port = parseInt(serverPort[1]);
 
                 if (!uuid || !server || isNaN(port)) {
                     return null;
@@ -5097,6 +5344,54 @@
             }
 
             return true;
+        }
+
+        // 新增：验证IPv6地址
+        function isValidIPv6(ip) {
+            if (!ip || typeof ip !== 'string') return false;
+            // 检查是否被方括号包裹，如果有则去掉
+            let bare = ip;
+            if (bare.startsWith('[') && bare.endsWith(']')) {
+                bare = bare.substring(1, bare.length - 1);
+            }
+            // 标准IPv6正则（完整形式和压缩形式，含IPv4映射）
+            const ipv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+            return ipv6Regex.test(bare);
+        }
+
+        // 新增：验证域名
+        function isValidDomain(addr) {
+            if (!addr || typeof addr !== 'string') return false;
+            // 允许标准域名格式（字母数字+连字符，每段1-63字符，至少有一个点）
+            // 也允许纯数字TLD如 cdn.2158.cc
+            return /^(?!:\/\/)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/.test(addr);
+        }
+
+        // 新增：验证任意类型的地址（IPv4 / IPv6 / 域名）
+        function isValidAddress(addr) {
+            return isValidIP(addr) || isValidIPv6(addr) || isValidDomain(addr);
+        }
+
+        // 新增：识别地址类型
+        function getAddressType(addr) {
+            if (!addr || typeof addr !== 'string') return null;
+            if (isValidIP(addr)) return 'ipv4';
+            if (isValidIPv6(addr)) return 'ipv6';
+            if (isValidDomain(addr)) return 'domain';
+            return null;
+        }
+
+        // 新增：缩短地址用于别名显示（IPv6地址可能很长）
+        function shortenAddressForAlias(addr) {
+            const type = getAddressType(addr);
+            if (type === 'ipv6') {
+                // 取首尾两部分，中间用..连接
+                const parts = addr.split(':');
+                const cleanParts = parts.filter(p => p !== '');
+                if (cleanParts.length <= 4) return addr; // 已经是短形式
+                return cleanParts.slice(0, 2).join(':') + '..' + cleanParts[cleanParts.length - 1];
+            }
+            return addr; // IPv4和域名直接返回
         }
 
 

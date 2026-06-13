@@ -1892,4 +1892,22 @@
         }
         /* 保持 btn-sm 的视觉一致性 */
         .btn-sm { padding: 6px 10px; }
-    
+
+        /* 节点预览弹窗表格样式 */
+        #previewModal table tbody tr {
+            transition: background 0.15s ease;
+        }
+        #previewModal table tbody tr:hover {
+            background: #f1f5f9;
+        }
+        #previewModal table tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+        #previewModal table tbody tr:nth-child(even):hover {
+            background: #f1f5f9;
+        }
+        #previewModal table td {
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
