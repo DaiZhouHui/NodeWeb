@@ -72,6 +72,7 @@
                     <div class="card-tab-navigation" id="csvTabNav">
                         <button class="card-tab-btn active" data-tab="upload-tab">上传文件</button>
                         <button class="card-tab-btn" data-tab="paste-tab">粘贴内容</button>
+                        <button class="card-tab-btn" data-tab="vless-direct-tab">Vless直链</button>
                         <button class="card-tab-btn" data-tab="config-tab">配置</button>
                     </div>
 
@@ -203,6 +204,32 @@
                         </div>
                     </div>
 
+                    <!-- Vless直链标签页 -->
+                    <div class="card-tab-content" id="vless-direct-tab">
+                        <div class="section">
+                            <div class="section-title">
+                                <span>🔗 粘贴Vless直链</span>
+                                <span class="help-inline">保留原始链接和别名，不读取IP或重新命名</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vlessDirectInput">Vless链接（每行一个）</label>
+                                <textarea id="vlessDirectInput"
+                                    placeholder="vless://...&#10;vless://...&#10;&#10;支持一次粘贴一个或多个链接"></textarea>
+                            </div>
+
+                            <div class="button-group">
+                                <button id="loadVlessDirectBtn" class="btn btn-primary">
+                                    <span>⚡</span> 载入Vless直链
+                                </button>
+                                <button id="clearVlessDirectBtn" class="btn btn-info">
+                                    <span>🗑️</span> 清空
+                                </button>
+                            </div>
+                            <div class="help-text">载入后可直接使用“上传本地订阅至指定路径”，无需生成、解析或重命名。</div>
+                        </div>
+                    </div>
+
                     <!-- 配置标签页 -->
                     <div class="card-tab-content" id="config-tab">
                         <div class="section">
@@ -320,7 +347,8 @@
                         <span>📊</span>
                         生成结果（节点汇总）
                         <span id="resultCount" class="badge">0节点</span>
-                        <button id="previewNodesBtn" class="btn btn-info" style="padding: 4px 12px; font-size: 13px; margin-left: 10px; vertical-align: middle;">
+                        <button id="previewNodesBtn" class="btn btn-info"
+                            style="padding: 4px 12px; font-size: 13px; margin-left: 10px; vertical-align: middle;">
                             <span>👁️</span> 预览节点
                         </button>
                     </h2>
@@ -1231,6 +1259,8 @@
             document.getElementById('copyLocalBase64Btn').addEventListener('click', () => copyText(data.localBase64Content));
             document.getElementById('copyLocalYamlBtn').addEventListener('click', () => copyText(data.localYamlContent));
             document.getElementById('downloadLocalYamlBtn').addEventListener('click', downloadLocalYaml);
+            document.getElementById('loadVlessDirectBtn').addEventListener('click', loadVlessDirect);
+            document.getElementById('clearVlessDirectBtn').addEventListener('click', clearVlessDirect);
 
             // 删除远程文件（及其 .yaml）功能实现
             async function deleteSingleGithubFile(filePath) {
@@ -1411,6 +1441,11 @@
                 }, 1000);
             });
 
+            document.getElementById('vlessDirectInput').addEventListener('input', () => {
+                data.currentSource = 'direct';
+                updateSourceBadge();
+            });
+
             // 修复：当切换到粘贴标签页时，如果已有内容，自动生成
             document.addEventListener('click', (e) => {
                 if (e.target.classList.contains('card-tab-btn') && e.target.getAttribute('data-tab') === 'paste-tab') {
@@ -1482,7 +1517,7 @@
                 // 使用通用上传函数
                 const result = await uploadToGitHub(
                     plainNodeFile,
-                    btoa(plainText),
+                    utf8ToBase64(plainText),
                     false,
                     `上传合并明文订阅到 ${plainNodeFile} - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`
                 );
@@ -1846,8 +1881,66 @@
             if (data.currentSource === 'file') {
                 const fileCount = data.uploadedFiles ? data.uploadedFiles.length : 1;
                 badge.textContent = fileCount > 1 ? `已上传${fileCount}个文件` : '已上传文件';
+            } else if (data.currentSource === 'direct') {
+                badge.textContent = 'Vless直链';
             } else {
                 badge.textContent = '粘贴内容';
+            }
+        }
+
+        function getDirectVlessLinks() {
+            const input = document.getElementById('vlessDirectInput').value;
+            const links = input.split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line.startsWith('vless://'));
+            return [...new Set(links)];
+        }
+
+        function loadVlessDirect() {
+            const links = getDirectVlessLinks();
+            const input = document.getElementById('vlessDirectInput').value;
+            const invalidLines = input.split(/\r?\n/)
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('vless://'));
+
+            if (links.length === 0) {
+                showNotification('载入失败', '请粘贴至少一条以 vless:// 开头的直链', 'error');
+                return;
+            }
+
+            data.currentSource = 'direct';
+            data.vlessLinks = links;
+            data.uniqueNodes = [];
+            data.stats.local = links.length;
+            data.stats.merged = 0;
+            data.stats.unique = 0;
+            data.localBase64Content = utf8ToBase64(links.join('\n'));
+            data.localYamlContent = generateClashYAML(links);
+            data.cache.lastLocalGeneration = Date.now();
+
+            document.getElementById('localBase64Output').textContent = data.localBase64Content;
+            document.getElementById('localBase64Output').classList.remove('empty');
+            document.getElementById('localYamlOutput').textContent = data.localYamlContent;
+            document.getElementById('localYamlOutput').classList.remove('empty');
+            updateSourceBadge();
+            displayVlessLinks();
+            updateStats();
+
+            const warning = invalidLines.length > 0 ? `，已忽略 ${invalidLines.length} 行非Vless内容` : '';
+            showNotification('直链载入成功', `已载入 ${links.length} 个Vless直链${warning}`, 'success');
+            addLog('载入Vless直链', `成功载入 ${links.length} 个原始Vless直链`, 'success');
+        }
+
+        function clearVlessDirect() {
+            document.getElementById('vlessDirectInput').value = '';
+            if (data.currentSource === 'direct') {
+                data.currentSource = 'none';
+                data.vlessLinks = [];
+                data.localBase64Content = '';
+                data.localYamlContent = '';
+                displayVlessLinks();
+                updateSourceBadge();
+                updateStats();
             }
         }
 
@@ -2425,7 +2518,7 @@
 
                 // 自动生成本地Base64
                 if (data.vlessLinks.length > 0) {
-                    data.localBase64Content = btoa(data.vlessLinks.join('\n'));
+                    data.localBase64Content = utf8ToBase64(data.vlessLinks.join('\n'));
                     // 生成对应的本地YAML内容
                     data.localYamlContent = generateClashYAML(data.vlessLinks);
                     document.getElementById('localBase64Output').textContent = data.localBase64Content;
@@ -2483,6 +2576,9 @@
         }
 
         async function parseAndGenerate(text, config) {
+            if (data.currentSource === 'direct') {
+                return getDirectVlessLinks();
+            }
             // 如果是文件上传的CSV，尝试解析完整CSV
             if (data.currentSource === 'file') {
                 return await parseCSVFile(text, config);
@@ -4125,6 +4221,23 @@
 
         async function mergeAndShow() {
             const all = [...data.vlessLinks, ...data.remoteNodes];
+
+            if (data.currentSource === 'direct' && data.remoteNodes.length === 0) {
+                data.uniqueNodes = [...new Set(data.vlessLinks)];
+                data.stats.merged = data.uniqueNodes.length;
+                data.stats.unique = data.uniqueNodes.length;
+                updateStats();
+                data.autoBase64Content = utf8ToBase64(data.uniqueNodes.join('\n'));
+                data.mergedYamlContent = generateClashYAML(data.uniqueNodes);
+                document.getElementById('autoBase64Output').textContent = data.autoBase64Content;
+                document.getElementById('autoBase64Output').classList.remove('empty');
+                document.getElementById('mergedResult').textContent = data.uniqueNodes.join('\n\n');
+                document.getElementById('mergedYamlOutput').textContent = data.mergedYamlContent;
+                document.getElementById('mergedYamlOutput').classList.remove('empty');
+                addLog('合并节点', `直链已保留原样，共 ${data.uniqueNodes.length} 个节点`, 'success');
+                return;
+            }
+
             const seen = new Set();
             data.uniqueNodes = [];
 
@@ -4264,7 +4377,7 @@
             updateStats();
 
             const plainText = data.uniqueNodes.join('\n');
-            data.autoBase64Content = btoa(plainText);
+            data.autoBase64Content = utf8ToBase64(plainText);
 
             // 生成对应的YAML内容
             data.mergedYamlContent = data.uniqueNodes.length ? generateClashYAML(data.uniqueNodes) : '';
@@ -4315,14 +4428,14 @@
                 if (targetFile === 'PlainNode') {
                     // PlainNode：上传明文节点
                     const plainText = data.vlessLinks.join('\n');
-                    contentToUpload = btoa(plainText);
+                    contentToUpload = utf8ToBase64(plainText);
                 } else if (targetFile === 'OptimalNode' || targetFile === 'MainNode') {
                     // OptimalNode 和 MainNode：上传双重Base64编码
-                    const firstBase64 = btoa(data.vlessLinks.join('\n'));
+                    const firstBase64 = utf8ToBase64(data.vlessLinks.join('\n'));
                     contentToUpload = btoa(firstBase64);
                 } else {
                     // 其他自定义路径：上传双重Base64编码
-                    const firstBase64 = btoa(data.vlessLinks.join('\n'));
+                    const firstBase64 = utf8ToBase64(data.vlessLinks.join('\n'));
                     contentToUpload = btoa(firstBase64);
                     // contentToUpload = data.localBase64Content || btoa(data.vlessLinks.join('\n'));
                 }
@@ -4395,7 +4508,7 @@
                 const plainText = data.uniqueNodes.join('\n');
 
                 // 修复：双重Base64编码（符合订阅格式）
-                const firstBase64 = btoa(plainText);
+                const firstBase64 = utf8ToBase64(plainText);
                 const finalContent = btoa(firstBase64);
 
                 // 使用通用上传函数
@@ -4466,7 +4579,7 @@
                 const plainText = data.uniqueNodes.join('\n');
 
                 // 双重Base64编码（符合订阅格式）
-                const firstBase64 = btoa(plainText);
+                const firstBase64 = utf8ToBase64(plainText);
                 const finalContent = btoa(firstBase64);
 
                 // 使用通用上传函数
@@ -4555,14 +4668,14 @@
                 // 根据目标路径决定上传格式
                 if (targetFile === 'PlainNode') {
                     // PlainNode：上传明文节点
-                    contentToUpload = btoa(plainText);
+                    contentToUpload = utf8ToBase64(plainText);
                 } else if (targetFile === 'OptimalNode' || targetFile === 'MainNode') {
                     // OptimalNode 和 MainNode：上传双重Base64编码
-                    const firstBase64 = btoa(plainText);
+                    const firstBase64 = utf8ToBase64(plainText);
                     contentToUpload = btoa(firstBase64);
                 } else {
                     // 其他自定义路径：使用双重Base64编码
-                    const firstBase64 = btoa(plainText);
+                    const firstBase64 = utf8ToBase64(plainText);
                     contentToUpload = btoa(firstBase64);
                 }
 
@@ -4648,7 +4761,7 @@
                 const plainText = data.uniqueNodes.join('\n');
 
                 // 双重Base64编码
-                const firstBase64 = btoa(plainText);
+                const firstBase64 = utf8ToBase64(plainText);
                 const finalContent = btoa(firstBase64);
 
                 // 6. 上传Base64订阅文件（MainNode）- 双重Base64编码
@@ -4665,7 +4778,7 @@
                 try {
                     await uploadToGitHub(
                         plainNodeFile,
-                        btoa(plainText),
+                        utf8ToBase64(plainText),
                         false,
                         `一键同步明文节点到PlainNode - ${new Date().toLocaleString()} (${data.uniqueNodes.length}节点)`
                     );
@@ -5299,7 +5412,7 @@
             }
             const t = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
             downloadBlob(data.vlessLinks.join('\n'), `vless_${t}.txt`);
-            downloadBlob(data.localBase64Content || btoa(data.vlessLinks.join('\n')), `subscription_${t}.txt`);
+            downloadBlob(data.localBase64Content || utf8ToBase64(data.vlessLinks.join('\n')), `subscription_${t}.txt`);
             showNotification('下载成功', '已下载Vless链接和订阅文件到本地，请查看下载文件夹', 'success');
             addLog('下载', '已下载Vless链接和订阅文件到本地', 'success');
         }
