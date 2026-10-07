@@ -298,20 +298,24 @@
                             <div class="config-row">
                                 <div class="form-group">
                                     <label>用户ID (UUID)</label>
-                                    <!-- 已去除readonly，改为可手动修改 -->
-                                    <input type="text" id="uuid" value="471a8e64-7b21-4703-b1d1-45a221098459">
+                                    <input type="text" id="uuid" list="uuidOptions"
+                                        value="471a8e64-7b21-4703-b1d1-45a221098459">
+                                    <datalist id="uuidOptions">
+                                        <option value="471a8e64-7b21-4703-b1d1-45a221098459"></option>
+                                        <option value="98765432-10fe-dcba-9876-543210fedcba"></option>
+                                    </datalist>
                                 </div>
 
                                 <div class="form-group">
                                     <label>伪装域名 (Host)</label>
-                                    <input type="text" id="host" value="knny.dpdns.org">
+                                    <input type="text" id="host" list="domainOptions" value="knny.dpdns.org">
                                 </div>
                             </div>
 
                             <div class="config-row">
                                 <div class="form-group">
                                     <label>SNI域名</label>
-                                    <input type="text" id="sni" value="knny.dpdns.org">
+                                    <input type="text" id="sni" list="domainOptions" value="knny.dpdns.org">
                                 </div>
 
                                 <div class="form-group">
@@ -319,6 +323,12 @@
                                     <input type="text" id="fp" value="chrome">
                                 </div>
                             </div>
+
+                            <datalist id="domainOptions">
+                                <option value="knny.dpdns.org"></option>
+                                <option value="kyma.dpdns.org"></option>
+                                <option value="node.soren920.dpdns.org"></option>
+                            </datalist>
 
                             <div class="config-row">
                                 <div class="form-group">
@@ -332,6 +342,7 @@
                                 • 加密方式：none<br>
                                 • 网络类型：ws<br>
                                 • TLS：启用<br>
+                                • ECH：仅原始Vless链接包含ech参数时启用，默认值为 cloudflare-ech.com+https://223.5.5.5/dns-query<br>
                                 • Flow：空<br>
                                 • 伪装方式：空
                             </div>
@@ -1896,6 +1907,21 @@
             return [...new Set(links)];
         }
 
+        function updateDirectVlessConfig(link, config) {
+            const url = new URL(link);
+            if (url.protocol !== 'vless:' || !url.username || !url.hostname) {
+                throw new Error('Vless链接格式无效');
+            }
+
+            url.username = config.uuid;
+            url.searchParams.set('host', config.host);
+            url.searchParams.set('sni', config.sni);
+            if (url.searchParams.has('ech')) {
+                url.searchParams.set('ech', 'cloudflare-ech.com+https://223.5.5.5/dns-query');
+            }
+            return url.toString();
+        }
+
         function loadVlessDirect() {
             const links = getDirectVlessLinks();
             const input = document.getElementById('vlessDirectInput').value;
@@ -2502,12 +2528,14 @@
             try {
                 const config = getConfig();
 
-                let text = '';
-                // 无论是上传文件还是粘贴内容，都从csvInput获取（因为handleFiles已经将合并后的内容放入了csvInput）
-                text = document.getElementById('csvInput').value.trim();
+                const text = data.currentSource === 'direct'
+                    ? document.getElementById('vlessDirectInput').value.trim()
+                    : document.getElementById('csvInput').value.trim();
 
                 if (!text) {
-                    showNotification('生成节点失败', '请提供CSV数据，可以上传文件或粘贴内容', 'error');
+                    showNotification('生成节点失败', data.currentSource === 'direct'
+                        ? '请先粘贴Vless直链'
+                        : '请提供CSV数据，可以上传文件或粘贴内容', 'error');
                     showLoading(false, 'generateBtn');
                     return;
                 }
@@ -2577,7 +2605,7 @@
 
         async function parseAndGenerate(text, config) {
             if (data.currentSource === 'direct') {
-                return getDirectVlessLinks();
+                return getDirectVlessLinks().map(link => updateDirectVlessConfig(link, config));
             }
             // 如果是文件上传的CSV，尝试解析完整CSV
             if (data.currentSource === 'file') {
