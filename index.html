@@ -298,24 +298,46 @@
                             <div class="config-row">
                                 <div class="form-group">
                                     <label>用户ID (UUID)</label>
-                                    <input type="text" id="uuid" list="uuidOptions"
-                                        value="471a8e64-7b21-4703-b1d1-45a221098459">
-                                    <datalist id="uuidOptions">
-                                        <option value="471a8e64-7b21-4703-b1d1-45a221098459"></option>
-                                        <option value="98765432-10fe-dcba-9876-543210fedcba"></option>
-                                    </datalist>
+                                    <div class="config-choice">
+                                        <input type="text" id="uuid" value="471a8e64-7b21-4703-b1d1-45a221098459">
+                                        <select aria-label="选择UUID候选值"
+                                            onchange="document.getElementById('uuid').value = this.value; this.selectedIndex = 0;">
+                                            <option value="" selected>选择候选值</option>
+                                            <option value="c7202207-6167-4647-964a-792d973c4f04">c7202207-6167-4647-964a-792d973c4f04</option>
+                                            <option value="471a8e64-7b21-4703-b1d1-45a221098459">471a8e64-7b21-4703-b1d1-45a221098459</option>
+                                            <option value="98765432-10fe-dcba-9876-543210fedcba">98765432-10fe-dcba-9876-543210fedcba</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div class="form-group">
                                     <label>伪装域名 (Host)</label>
-                                    <input type="text" id="host" list="domainOptions" value="knny.dpdns.org">
+                                    <div class="config-choice">
+                                        <input type="text" id="host" value="knny.dpdns.org">
+                                        <select aria-label="选择Host候选值"
+                                            onchange="document.getElementById('host').value = this.value; this.selectedIndex = 0;">
+                                            <option value="" selected>选择候选值</option>
+                                            <option value="knny.dpdns.org">knny.dpdns.org</option>
+                                            <option value="kyma.dpdns.org">kyma.dpdns.org</option>
+                                            <option value="node.soren920.dpdns.org">node.soren920.dpdns.org</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="config-row">
                                 <div class="form-group">
                                     <label>SNI域名</label>
-                                    <input type="text" id="sni" list="domainOptions" value="knny.dpdns.org">
+                                    <div class="config-choice">
+                                        <input type="text" id="sni" value="knny.dpdns.org">
+                                        <select aria-label="选择SNI候选值"
+                                            onchange="document.getElementById('sni').value = this.value; this.selectedIndex = 0;">
+                                            <option value="" selected>选择候选值</option>
+                                            <option value="knny.dpdns.org">knny.dpdns.org</option>
+                                            <option value="kyma.dpdns.org">kyma.dpdns.org</option>
+                                            <option value="node.soren920.dpdns.org">node.soren920.dpdns.org</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div class="form-group">
@@ -324,16 +346,14 @@
                                 </div>
                             </div>
 
-                            <datalist id="domainOptions">
-                                <option value="knny.dpdns.org"></option>
-                                <option value="kyma.dpdns.org"></option>
-                                <option value="node.soren920.dpdns.org"></option>
-                            </datalist>
-
                             <div class="config-row">
                                 <div class="form-group">
                                     <label>自定义Path参数 <span class="help-inline">默认: /?ed=2048</span></label>
                                     <input type="text" id="customPath" value="/?ed=2048" placeholder="例如: /?ed=2048">
+                                </div>
+                                <div class="form-group">
+                                    <label>ECH参数 <span class="help-inline">仅更新原链接已有的ech参数</span></label>
+                                    <input type="text" id="ech" value="cloudflare-ech.com+https://223.5.5.5/dns-query">
                                 </div>
                             </div>
 
@@ -1917,7 +1937,11 @@
             url.searchParams.set('host', config.host);
             url.searchParams.set('sni', config.sni);
             if (url.searchParams.has('ech')) {
-                url.searchParams.set('ech', 'cloudflare-ech.com+https://223.5.5.5/dns-query');
+                if (config.ech) {
+                    url.searchParams.set('ech', config.ech);
+                } else {
+                    url.searchParams.delete('ech');
+                }
             }
             return url.toString();
         }
@@ -2588,6 +2612,7 @@
                 uuid: document.getElementById('uuid').value.trim() || "471a8e64-7b21-4703-b1d1-45a221098459",
                 host: document.getElementById('host').value.trim() || "knny.dpdns.org",
                 sni: document.getElementById('sni').value.trim() || "knny.dpdns.org",
+                ech: document.getElementById('ech').value.trim(),
                 fp: document.getElementById('fp').value.trim() || "chrome",
                 force443: document.getElementById('forcePort443').checked,
                 defaultPort: parseInt(document.getElementById('defaultPort').value) || 443,

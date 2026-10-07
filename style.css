@@ -453,6 +453,24 @@
             margin-bottom: 16px;
         }
 
+        .config-choice {
+            display: flex;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .config-choice input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .config-choice select {
+            flex: 0 1 42%;
+            min-width: 126px;
+            padding-right: 8px;
+            padding-left: 8px;
+        }
+
         /* CSV专用：每行3列显示并将帮助信息放到输入框旁边（增加间距以防拥挤） */
         .csv-config-row {
             display: grid;
