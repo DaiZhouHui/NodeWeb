@@ -302,7 +302,7 @@
                                         <input type="text" id="uuid" value="c7202207-6167-4647-964a-792d973c4f04">
                                         <select aria-label="选择UUID候选值"
                                             onchange="document.getElementById('uuid').value = this.value; this.selectedIndex = 0;">
-                                            <option value="" selected>选择候选值</option>
+                                            <option value="" selected></option>
                                             <option value="c7202207-6167-4647-964a-792d973c4f04">
                                                 c7202207-6167-4647-964a-792d973c4f04</option>
                                             <option value="471a8e64-7b21-4703-b1d1-45a221098459">
@@ -316,10 +316,11 @@
                                 <div class="form-group">
                                     <label>伪装域名 (Host)</label>
                                     <div class="config-choice">
-                                        <input type="text" id="host" value="knny.dpdns.org">
+                                        <input type="text" id="host" value="knnn.dpdns.org">
                                         <select aria-label="选择Host候选值"
                                             onchange="document.getElementById('host').value = this.value; this.selectedIndex = 0;">
-                                            <option value="" selected>选择候选值</option>
+                                            <option value="" selected></option>
+                                            <option value="knnn.dpdns.org">knnn.dpdns.org</option>
                                             <option value="knny.dpdns.org">knny.dpdns.org</option>
                                             <option value="kyma.dpdns.org">kyma.dpdns.org</option>
                                             <option value="node.soren920.dpdns.org">node.soren920.dpdns.org</option>
@@ -332,10 +333,11 @@
                                 <div class="form-group">
                                     <label>SNI域名</label>
                                     <div class="config-choice">
-                                        <input type="text" id="sni" value="knny.dpdns.org">
+                                        <input type="text" id="sni" value="knnn.dpdns.org">
                                         <select aria-label="选择SNI候选值"
                                             onchange="document.getElementById('sni').value = this.value; this.selectedIndex = 0;">
-                                            <option value="" selected>选择候选值</option>
+                                            <option value="" selected></option>
+                                            <option value="knnn.dpdns.org">knnn.dpdns.org</option>
                                             <option value="knny.dpdns.org">knny.dpdns.org</option>
                                             <option value="kyma.dpdns.org">kyma.dpdns.org</option>
                                             <option value="node.soren920.dpdns.org">node.soren920.dpdns.org</option>
@@ -2613,8 +2615,8 @@
         function getConfig() {
             return {
                 uuid: document.getElementById('uuid').value.trim() || "c7202207-6167-4647-964a-792d973c4f04",
-                host: document.getElementById('host').value.trim() || "knny.dpdns.org",
-                sni: document.getElementById('sni').value.trim() || "knny.dpdns.org",
+                host: document.getElementById('host').value || "knnn.dpdns.org",
+                sni: document.getElementById('sni').value || "knnn.dpdns.org",
                 ech: document.getElementById('ech').value.trim(),
                 fp: document.getElementById('fp').value.trim() || "chrome",
                 force443: document.getElementById('forcePort443').checked,
