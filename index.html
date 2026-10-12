@@ -309,6 +309,8 @@
                                                 471a8e64-7b21-4703-b1d1-45a221098459</option>
                                             <option value="98765432-10fe-dcba-9876-543210fedcba">
                                                 98765432-10fe-dcba-9876-543210fedcba</option>
+                                            <option value="99ea2764-f1df-4aa8-b01d-0adb42cc2f77">
+                                                99ea2764-f1df-4aa8-b01d-0adb42cc2f77</option>
                                         </select>
                                     </div>
                                 </div>
@@ -316,10 +318,11 @@
                                 <div class="form-group">
                                     <label>伪装域名 (Host)</label>
                                     <div class="config-choice">
-                                        <input type="text" id="host" value="knnn.dpdns.org">
+                                        <input type="text" id="host" value="knnn1.pages.dev">
                                         <select aria-label="选择Host候选值"
                                             onchange="document.getElementById('host').value = this.value; this.selectedIndex = 0;">
                                             <option value="" selected></option>
+                                            <option value="knnn1.pages.dev">knnn1.pages.dev</option>
                                             <option value="knnn.dpdns.org">knnn.dpdns.org</option>
                                             <option value="knny.dpdns.org">knny.dpdns.org</option>
                                             <option value="kyma.dpdns.org">kyma.dpdns.org</option>
@@ -333,10 +336,11 @@
                                 <div class="form-group">
                                     <label>SNI域名</label>
                                     <div class="config-choice">
-                                        <input type="text" id="sni" value="knnn.dpdns.org">
+                                        <input type="text" id="sni" value="knnn1.pages.dev">
                                         <select aria-label="选择SNI候选值"
                                             onchange="document.getElementById('sni').value = this.value; this.selectedIndex = 0;">
                                             <option value="" selected></option>
+                                            <option value="knnn1.pages.dev">knnn1.pages.dev</option>
                                             <option value="knnn.dpdns.org">knnn.dpdns.org</option>
                                             <option value="knny.dpdns.org">knny.dpdns.org</option>
                                             <option value="kyma.dpdns.org">kyma.dpdns.org</option>
@@ -2615,8 +2619,8 @@
         function getConfig() {
             return {
                 uuid: document.getElementById('uuid').value.trim() || "c7202207-6167-4647-964a-792d973c4f04",
-                host: document.getElementById('host').value || "knnn.dpdns.org",
-                sni: document.getElementById('sni').value || "knnn.dpdns.org",
+                host: document.getElementById('host').value || "knnn1.pages.dev",
+                sni: document.getElementById('sni').value || "knnn1.pages.dev",
                 ech: document.getElementById('ech').value.trim(),
                 fp: document.getElementById('fp').value.trim() || "chrome",
                 force443: document.getElementById('forcePort443').checked,
