@@ -2432,6 +2432,12 @@
           return;
         }
 
+        const fileInput = document.getElementById("fileInput");
+        const dataTransfer = new DataTransfer();
+        validFiles.forEach((file) => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+        data.csvColumnDetection.detected = false;
+
         // 存储已上传的文件列表
         if (!data.uploadedFiles) {
           data.uploadedFiles = [];
@@ -2521,13 +2527,13 @@
         // 将合并的内容设置到csvInput（用于解析）
         document.getElementById("csvInput").value = combinedContent;
 
-        // 进行列检测
-        autoDetectCSVColumns();
-
-        // 自动生成节点
-        setTimeout(() => {
-          generateVless();
-        }, 100);
+        // 等待列检测完成，避免生成时使用上一次文件的列配置。
+        const columnsDetected = await new Promise((resolve) =>
+          autoDetectCSVColumns(validFiles[0], resolve),
+        );
+        if (columnsDetected) {
+          await generateVless();
+        }
 
         const message =
           validFiles.length === 1
@@ -2748,14 +2754,22 @@
 
       // 新增：智能检测CSV列功能 - 修复：准确检测速度列和端口列
       // 新增：智能检测CSV列功能 - 完整修复版
-      function autoDetectCSVColumns() {
+      function autoDetectCSVColumns(
+        selectedFile = null,
+        onComplete = () => {},
+      ) {
         const fileInput = document.getElementById("fileInput");
-        if (!fileInput.files || fileInput.files.length === 0) {
+        const file =
+          selectedFile ||
+          (fileInput.files && fileInput.files.length > 0
+            ? fileInput.files[0]
+            : null);
+        if (!file) {
           showNotification("检测失败", "请先上传CSV文件", "warning");
+          onComplete(false);
           return;
         }
 
-        const file = fileInput.files[0];
         const reader = new FileReader();
 
         reader.onload = function (e) {
@@ -2764,6 +2778,7 @@
 
           if (lines.length === 0) {
             showNotification("检测失败", "CSV文件为空", "error");
+            onComplete(false);
             return;
           }
 
@@ -2784,6 +2799,7 @@
 
           if (rows.length === 0) {
             showNotification("检测失败", "无法解析CSV文件格式", "error");
+            onComplete(false);
             return;
           }
 
@@ -3218,11 +3234,13 @@
           const summary = `检测到${columnCount}列，${hasHeader ? "有标题行" : "无标题行"}，IP列: ${ipColumn + 1}(${String.fromCharCode(65 + ipColumn)})，${portColumn !== -1 ? `端口列: ${portColumn + 1}(${String.fromCharCode(65 + portColumn)})` : "未检测到端口列"}`;
           showNotification("检测完成", summary, "success");
           addLog("CSV列检测", summary, "success");
+          onComplete(true);
         };
 
-        reader.onerror = function (e) {
+        reader.onerror = function () {
           showNotification("检测失败", "无法读取文件内容", "error");
           addLog("CSV列检测", "文件读取失败", "error");
+          onComplete(false);
         };
 
         reader.readAsText(file);
