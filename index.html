@@ -3563,6 +3563,33 @@
         }
       }
 
+      function findChineseMapping(value, mapping) {
+        if (typeof value !== "string") return "";
+        const normalizedValue = value.trim();
+        if (!normalizedValue) return "";
+
+        if (Object.prototype.hasOwnProperty.call(mapping, normalizedValue)) {
+          return mapping[normalizedValue];
+        }
+
+        const uppercaseValue = normalizedValue.toUpperCase();
+        if (Object.prototype.hasOwnProperty.call(mapping, uppercaseValue)) {
+          return mapping[uppercaseValue];
+        }
+
+        const matchingKey = Object.keys(mapping).find(
+          (key) => key.toLowerCase() === normalizedValue.toLowerCase(),
+        );
+        return matchingKey ? mapping[matchingKey] : "";
+      }
+
+      function getChineseLocationName(value) {
+        return (
+          findChineseMapping(value, countryNameToChinese) ||
+          findChineseMapping(value, regionCodeToChinese)
+        );
+      }
+
       // 解析CSV文件 - 修复别名生成逻辑
       // 解析CSV文件 - 修复别名生成逻辑，按照需求1生成别名
       async function parseCSVFile(text, config) {
@@ -3767,45 +3794,10 @@
               }
             }
 
-            // 转换地区码为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
-            let chineseRegion = "";
-            if (region && region.trim()) {
-              const regionTrimmed = region.trim();
-              const regionUpper = regionTrimmed.toUpperCase();
-              if (countryNameToChinese[regionTrimmed]) {
-                chineseRegion = countryNameToChinese[regionTrimmed];
-              } else if (regionCodeToChinese[regionUpper]) {
-                chineseRegion = regionCodeToChinese[regionUpper];
-              }
-            }
-
-            // 转换城市名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
-            let chineseCity = "";
-            if (city && city.trim()) {
-              const cityTrimmed = city.trim();
-              const cityUpper = cityTrimmed.toUpperCase();
-              if (countryNameToChinese[cityTrimmed]) {
-                chineseCity = countryNameToChinese[cityTrimmed];
-              } else if (regionCodeToChinese[cityUpper]) {
-                chineseCity = regionCodeToChinese[cityUpper];
-              } else {
-                chineseCity = cityTrimmed;
-              }
-            }
-
-            // 转换国家名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
-            let chineseCountry = "";
-            if (country && country.trim()) {
-              const countryTrimmed = country.trim();
-              const countryUpper = countryTrimmed.toUpperCase();
-              if (countryNameToChinese[countryTrimmed]) {
-                chineseCountry = countryNameToChinese[countryTrimmed];
-              } else if (regionCodeToChinese[countryUpper]) {
-                chineseCountry = regionCodeToChinese[countryUpper];
-              } else {
-                chineseCountry = countryTrimmed;
-              }
-            }
+            const chineseRegion = getChineseLocationName(region);
+            const chineseCity = getChineseLocationName(city) || city.trim();
+            const chineseCountry =
+              getChineseLocationName(country) || country.trim();
 
             // 确定地区名用于分组和序号
             let regionNameForGroup = "";
@@ -3937,41 +3929,9 @@
           };
         }
 
-        // 转换地区码为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
-        let chineseRegion = region;
-        if (region && region.trim()) {
-          const regionTrimmed = region.trim();
-          const regionUpper = regionTrimmed.toUpperCase();
-          if (countryNameToChinese[regionTrimmed]) {
-            chineseRegion = countryNameToChinese[regionTrimmed];
-          } else if (regionCodeToChinese[regionUpper]) {
-            chineseRegion = regionCodeToChinese[regionUpper];
-          }
-        }
-
-        // 转换城市名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
-        let chineseCity = city;
-        if (city && city.trim()) {
-          const cityTrimmed = city.trim();
-          const cityUpper = cityTrimmed.toUpperCase();
-          if (countryNameToChinese[cityTrimmed]) {
-            chineseCity = countryNameToChinese[cityTrimmed];
-          } else if (regionCodeToChinese[cityUpper]) {
-            chineseCity = regionCodeToChinese[cityUpper];
-          }
-        }
-
-        // 转换国家名为中文名称（优先countryNameToChinese，再尝试regionCodeToChinese）
-        let chineseCountry = country;
-        if (country && country.trim()) {
-          const countryTrimmed = country.trim();
-          const countryUpper = countryTrimmed.toUpperCase();
-          if (countryNameToChinese[countryTrimmed]) {
-            chineseCountry = countryNameToChinese[countryTrimmed];
-          } else if (regionCodeToChinese[countryUpper]) {
-            chineseCountry = regionCodeToChinese[countryUpper];
-          }
-        }
+        const chineseRegion = getChineseLocationName(region) || region;
+        const chineseCity = getChineseLocationName(city) || city;
+        const chineseCountry = getChineseLocationName(country) || country;
 
         // 构建别名部分，遵循规则：
         // - 如果存在城市： 城市 - （可选速度） - 端口 - 国家 - IP
