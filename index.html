@@ -2669,6 +2669,7 @@
         url.username = config.uuid;
         url.searchParams.set("host", config.host);
         url.searchParams.set("sni", config.sni);
+        url.searchParams.set("path", config.customPath);
         if (url.searchParams.has("ech")) {
           if (config.ech) {
             url.searchParams.set("ech", config.ech);
@@ -3536,6 +3537,7 @@
             "99999999-9999-8999-9999-99abcdefabcd",
           host: document.getElementById("host").value || "node.kyma.dpdns.org",
           sni: document.getElementById("sni").value || "node.kyma.dpdns.org",
+          customPath: document.getElementById("customPath").value.trim(),
           ech: document.getElementById("ech").value.trim(),
           fp: document.getElementById("fp").value.trim() || "chrome",
           force443: document.getElementById("forcePort443").checked,
