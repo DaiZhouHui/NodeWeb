@@ -183,16 +183,16 @@
                     <div class="csv-form-group">
                       <label for="ipColumn"
                         >IP地址列
-                        <span class="help-inline">A列=0，B列=1</span></label
+                        <span class="help-inline">A列=1，B列=2</span></label
                       >
                       <div class="input-row">
-                        <input type="number" id="ipColumn" value="0" min="0" />
+                        <input type="number" id="ipColumn" value="1" min="1" />
                       </div>
                     </div>
                     <div class="csv-form-group">
                       <label for="portColumn"
                         >端口列
-                        <span class="help-inline">-1表示无端口列</span></label
+                        <span class="help-inline">A列=1，-1表示无该列</span></label
                       >
                       <div class="input-row">
                         <input
@@ -206,7 +206,7 @@
                     <div class="csv-form-group">
                       <label for="cityColumn"
                         >城市列
-                        <span class="help-inline">优先用于别名</span></label
+                        <span class="help-inline">A列=1，-1表示无该列</span></label
                       >
                       <div class="input-row">
                         <input
@@ -223,7 +223,7 @@
                     <div class="csv-form-group">
                       <label for="countryColumn"
                         >国家列
-                        <span class="help-inline">用于显示国家</span></label
+                        <span class="help-inline">A列=1，-1表示无该列</span></label
                       >
                       <div class="input-row">
                         <input
@@ -237,7 +237,7 @@
                     <div class="csv-form-group">
                       <label for="regionColumn"
                         >地区码列
-                        <span class="help-inline">如机场/州代码</span></label
+                        <span class="help-inline">A列=1，-1表示无该列</span></label
                       >
                       <div class="input-row">
                         <input
@@ -251,7 +251,7 @@
                     <div class="csv-form-group">
                       <label for="speedColumn"
                         >下载速度列
-                        <span class="help-inline">用于别名展示</span></label
+                        <span class="help-inline">A列=1，-1表示无该列</span></label
                       >
                       <div class="input-row">
                         <input
@@ -3463,13 +3463,24 @@
         const detection = data.csvColumnDetection;
         if (!detection.detected) return;
 
-        document.getElementById("ipColumn").value = detection.ipColumn;
-        document.getElementById("portColumn").value = detection.portColumn;
-        document.getElementById("cityColumn").value = detection.cityColumn;
+        const toDisplayedColumn = (index) => (index < 0 ? -1 : index + 1);
+        document.getElementById("ipColumn").value = toDisplayedColumn(
+          detection.ipColumn,
+        );
+        document.getElementById("portColumn").value = toDisplayedColumn(
+          detection.portColumn,
+        );
+        document.getElementById("cityColumn").value = toDisplayedColumn(
+          detection.cityColumn,
+        );
         document.getElementById("countryColumn").value =
-          detection.countryColumn;
-        document.getElementById("regionColumn").value = detection.regionColumn;
-        document.getElementById("speedColumn").value = detection.speedColumn;
+          toDisplayedColumn(detection.countryColumn);
+        document.getElementById("regionColumn").value = toDisplayedColumn(
+          detection.regionColumn,
+        );
+        document.getElementById("speedColumn").value = toDisplayedColumn(
+          detection.speedColumn,
+        );
 
         // 将检测结果反映在输入框上：加上 detected / not-detected 类
         const setDetectionClass = (id, colIndex) => {
@@ -3585,6 +3596,18 @@
       }
 
       function getConfig() {
+        const readColumnIndex = (id, fallback) => {
+          const displayedIndex = Number.parseInt(
+            document.getElementById(id).value,
+            10,
+          );
+          if (displayedIndex === -1) return -1;
+          if (Number.isInteger(displayedIndex) && displayedIndex >= 1) {
+            return displayedIndex - 1;
+          }
+          return fallback;
+        };
+
         return {
           uuid:
             document.getElementById("uuid").value.trim() ||
@@ -3601,17 +3624,12 @@
             document.getElementById("remarksPrefix").value.trim() || "自选",
           autoLoc: document.getElementById("autoLocation").checked,
           useCsvInfo: document.getElementById("useCsvInfo").checked,
-          ipColumn: parseInt(document.getElementById("ipColumn").value) || 0,
-          portColumn:
-            parseInt(document.getElementById("portColumn").value) || -1,
-          cityColumn:
-            parseInt(document.getElementById("cityColumn").value) || -1,
-          countryColumn:
-            parseInt(document.getElementById("countryColumn").value) || -1,
-          regionColumn:
-            parseInt(document.getElementById("regionColumn").value) || -1,
-          speedColumn:
-            parseInt(document.getElementById("speedColumn").value) || -1,
+          ipColumn: readColumnIndex("ipColumn", 0),
+          portColumn: readColumnIndex("portColumn", -1),
+          cityColumn: readColumnIndex("cityColumn", -1),
+          countryColumn: readColumnIndex("countryColumn", -1),
+          regionColumn: readColumnIndex("regionColumn", -1),
+          speedColumn: readColumnIndex("speedColumn", -1),
         };
       }
 
