@@ -1503,6 +1503,7 @@
           countryColumn: -1,
           regionColumn: -1,
           speedColumn: -1,
+          speedColumnDetectedByHeader: false,
           hasHeader: false,
           detected: false,
         },
@@ -3082,12 +3083,33 @@
             }
           }
 
-          // 检测速度列 - 重点修复G列（索引6）检测
-          let speedColumn = -1;
+          const getHeader = (index) =>
+            firstRow[index]
+              .toString()
+              .replace(/^\uFEFF/, "")
+              .toLowerCase()
+              .trim();
+          const findHeaderColumn = (matches, excluded = []) => {
+            if (!hasHeader) return -1;
+            return firstRow.findIndex(
+              (_, index) =>
+                !excluded.includes(index) && matches(getHeader(index)),
+            );
+          };
+
+          // 优先依据标题识别语义列，避免城市/地区等文本列互相误判。
+          let speedColumn = findHeaderColumn(
+            (header) =>
+              /speed|速度|速率|网速|测速|download|bandwidth|带宽|throughput|mb\/s|mbps|mbit|gb\/s|gbps|kb\/s|kbps/i.test(
+                header,
+              ),
+            [ipColumn, portColumn],
+          );
+          const speedColumnDetectedByHeader = speedColumn !== -1;
           let maxSpeedScore = 0;
 
-          // 特别检查G列（第7列，索引6）
-          if (columnStats.length > 6) {
+          // 未通过标题识别时，兼容速度值包含单位的CSV。
+          if (speedColumn === -1 && columnStats.length > 6) {
             const gColumn = 6;
             const gColumnValues = columnStats[gColumn].values;
             let gSpeedScore = 0;
@@ -3109,29 +3131,6 @@
             for (let i = 0; i < columnStats.length; i++) {
               if (i === ipColumn || i === portColumn) continue;
 
-              // 基于标题检测
-              if (hasHeader) {
-                const header = firstRow[i].toString().toLowerCase();
-                const speedKeywords = [
-                  "speed",
-                  "速度",
-                  "download",
-                  "bandwidth",
-                  "带宽",
-                  "mb/s",
-                  "mb",
-                  "mbit",
-                  "mbit/s",
-                ];
-                for (const keyword of speedKeywords) {
-                  if (header.includes(keyword)) {
-                    speedColumn = i;
-                    break;
-                  }
-                }
-                if (speedColumn !== -1) break;
-              }
-
               // 基于数据检测
               const speedScore =
                 columnStats[i].speedCount / Math.max(1, columnStats[i].total);
@@ -3142,120 +3141,87 @@
             }
           }
 
-          // 检测延迟列（防止误判）
-          let delayColumn = -1;
+          let delayColumn = findHeaderColumn(
+            (header) =>
+              /delay|延迟|ping|latency|响应时间|耗时/.test(header),
+            [ipColumn, portColumn, speedColumn],
+          );
           let maxDelayScore = 0;
-          for (let i = 0; i < columnStats.length; i++) {
-            if (i === ipColumn || i === portColumn || i === speedColumn)
-              continue;
-
-            if (hasHeader) {
-              const header = firstRow[i].toString().toLowerCase();
+          if (delayColumn === -1) {
+            for (let i = 0; i < columnStats.length; i++) {
               if (
-                header.includes("delay") ||
-                header.includes("延迟") ||
-                header.includes("ping") ||
-                header.includes("ms") ||
-                header.includes("time")
+                i === ipColumn ||
+                i === portColumn ||
+                i === speedColumn
               ) {
+                continue;
+              }
+
+              const delayScore =
+                columnStats[i].delayCount / Math.max(1, columnStats[i].total);
+              if (delayScore > maxDelayScore && delayScore > 0.3) {
+                maxDelayScore = delayScore;
                 delayColumn = i;
-                break;
               }
-            }
-
-            const delayScore =
-              columnStats[i].delayCount / Math.max(1, columnStats[i].total);
-            if (delayScore > maxDelayScore && delayScore > 0.3) {
-              maxDelayScore = delayScore;
-              delayColumn = i;
-            }
-          }
-
-          // 检测城市列
-          let cityColumn = -1;
-          for (let i = 0; i < columnStats.length; i++) {
-            if (
-              i === ipColumn ||
-              i === portColumn ||
-              i === speedColumn ||
-              i === delayColumn
-            )
-              continue;
-
-            if (hasHeader) {
-              const header = firstRow[i].toString().toLowerCase();
-              if (
-                header.includes("city") ||
-                header.includes("城市") ||
-                header.includes("地区") ||
-                header.includes("location")
-              ) {
-                cityColumn = i;
-                break;
-              }
-            }
-
-            // 文本列可能是城市
-            if (
-              columnStats[i].textCount / Math.max(1, columnStats[i].total) >
-              0.7
-            ) {
-              cityColumn = i;
             }
           }
 
           // 检测国家列
-          let countryColumn = -1;
-          for (let i = 0; i < columnStats.length; i++) {
-            if (
-              i === ipColumn ||
-              i === portColumn ||
-              i === speedColumn ||
-              i === delayColumn ||
-              i === cityColumn
-            )
-              continue;
-
-            if (hasHeader) {
-              const header = firstRow[i].toString().toLowerCase();
-              if (
-                header.includes("country") ||
-                header.includes("国家") ||
-                header.includes("nation") ||
-                header.includes("country_code") ||
-                header.includes("country_name")
-              ) {
-                countryColumn = i;
-                break;
-              }
-            }
-          }
+          const countryColumn = findHeaderColumn(
+            (header) =>
+              /country|国家|nation|国别|国家代码|国家名称/.test(header),
+            [ipColumn, portColumn, speedColumn, delayColumn],
+          );
 
           // 检测地区码列
-          let regionColumn = -1;
-          for (let i = 0; i < columnStats.length; i++) {
-            if (
-              i === ipColumn ||
-              i === portColumn ||
-              i === speedColumn ||
-              i === delayColumn ||
-              i === cityColumn ||
-              i === countryColumn
-            )
-              continue;
+          const regionColumn = findHeaderColumn(
+            (header) =>
+              /region|区域|地区码|地区代码|地区编码|区域码|行政区划|机场|州|省|area|region.?code|airport.?code/.test(
+                header,
+              ) ||
+              (header.includes("code") &&
+                !/country|国家|nation/.test(header)),
+            [
+              ipColumn,
+              portColumn,
+              speedColumn,
+              delayColumn,
+              countryColumn,
+            ],
+          );
 
-            if (hasHeader) {
-              const header = firstRow[i].toString().toLowerCase();
+          // 地区码优先从地区标题识别，避免被当作城市；其余文本列可作为城市候选。
+          let cityColumn = findHeaderColumn(
+            (header) =>
+              /city|城市|location|地点|城市名称/.test(header) ||
+              header === "地区",
+            [
+              ipColumn,
+              portColumn,
+              speedColumn,
+              delayColumn,
+              countryColumn,
+              regionColumn,
+            ],
+          );
+          if (cityColumn === -1) {
+            for (let i = 0; i < columnStats.length; i++) {
               if (
-                header.includes("region") ||
-                header.includes("区域") ||
-                header.includes("州") ||
-                header.includes("省") ||
-                header.includes("area") ||
-                header.includes("code") ||
-                header.includes("地区码")
+                i === ipColumn ||
+                i === portColumn ||
+                i === speedColumn ||
+                i === delayColumn ||
+                i === countryColumn ||
+                i === regionColumn
               ) {
-                regionColumn = i;
+                continue;
+              }
+              if (
+                columnStats[i].textCount /
+                  Math.max(1, columnStats[i].total) >
+                0.7
+              ) {
+                cityColumn = i;
                 break;
               }
             }
@@ -3269,6 +3235,7 @@
             countryColumn: countryColumn,
             regionColumn: regionColumn,
             speedColumn: speedColumn,
+            speedColumnDetectedByHeader: speedColumnDetectedByHeader,
             delayColumn: delayColumn,
             hasHeader: hasHeader,
             detected: true,
@@ -3295,7 +3262,7 @@
           // 添加当前状态类
           resultDiv.classList.add(detectionQuality);
 
-          const summary = `检测到${columnCount}列，${hasHeader ? "有标题行" : "无标题行"}，IP列: ${ipColumn + 1}(${String.fromCharCode(65 + ipColumn)})，${portColumn !== -1 ? `端口列: ${portColumn + 1}(${String.fromCharCode(65 + portColumn)})` : "未检测到端口列"}`;
+          const summary = `检测到${columnCount}列，${hasHeader ? "有标题行" : "无标题行"}，${createColumnDetectionSummary(data.csvColumnDetection)}`;
           showNotification("检测完成", summary, "success");
           addLog("CSV列检测", summary, "success");
           onComplete(true);
@@ -3389,6 +3356,29 @@
         return false;
       }
 
+      function formatDetectedColumn(index) {
+        if (index === -1) return "未检测到";
+        let columnName = "";
+        let columnNumber = index + 1;
+        while (columnNumber > 0) {
+          columnNumber -= 1;
+          columnName = String.fromCharCode(65 + (columnNumber % 26)) + columnName;
+          columnNumber = Math.floor(columnNumber / 26);
+        }
+        return `${index + 1}(${columnName})`;
+      }
+
+      function createColumnDetectionSummary(detection) {
+        return [
+          `IP列: ${formatDetectedColumn(detection.ipColumn)}`,
+          `端口列: ${formatDetectedColumn(detection.portColumn)}`,
+          `城市列: ${formatDetectedColumn(detection.cityColumn)}`,
+          `国家列: ${formatDetectedColumn(detection.countryColumn)}`,
+          `地区码列: ${formatDetectedColumn(detection.regionColumn)}`,
+          `下载速度列: ${formatDetectedColumn(detection.speedColumn)}`,
+        ].join(" | ");
+      }
+
       // 更新列检测结果显示 - 优化样式
       // 更新列检测结果显示 - 优化样式和逻辑
       // 更新列检测结果显示 - 优化样式和逻辑
@@ -3401,31 +3391,7 @@
         if (detection.detected) {
           resultDiv.style.display = "block";
 
-          // 构建检测结果摘要（更紧凑的格式）
-          let summaryParts = [];
-          summaryParts.push(
-            `IP列: ${detection.ipColumn + 1}(${String.fromCharCode(65 + detection.ipColumn)})`,
-          );
-
-          if (detection.portColumn !== -1) {
-            summaryParts.push(
-              `端口列: ${detection.portColumn + 1}(${String.fromCharCode(65 + detection.portColumn)})`,
-            );
-          }
-
-          if (detection.speedColumn !== -1) {
-            summaryParts.push(
-              `速度列: ${detection.speedColumn + 1}(${String.fromCharCode(65 + detection.speedColumn)})`,
-            );
-          }
-
-          if (detection.cityColumn !== -1) {
-            summaryParts.push(
-              `城市列: ${detection.cityColumn + 1}(${String.fromCharCode(65 + detection.cityColumn)})`,
-            );
-          }
-
-          summarySpan.textContent = summaryParts.join(" | ");
+          summarySpan.textContent = createColumnDetectionSummary(detection);
 
           // 构建详细说明 - 只在有需要说明的内容时才显示
           let detailsContent = "";
@@ -3433,6 +3399,21 @@
 
           if (detection.portColumn === -1) {
             detailsContent += "• 未检测到端口列，将使用默认端口443<br>";
+            hasImportantNotes = true;
+          }
+
+          if (detection.cityColumn === -1) {
+            detailsContent += "• 未检测到城市列，必要时可手动指定<br>";
+            hasImportantNotes = true;
+          }
+
+          if (detection.countryColumn === -1) {
+            detailsContent += "• 未检测到国家列，必要时可手动指定<br>";
+            hasImportantNotes = true;
+          }
+
+          if (detection.regionColumn === -1) {
+            detailsContent += "• 未检测到地区码列，必要时可手动指定<br>";
             hasImportantNotes = true;
           }
 
@@ -3447,7 +3428,10 @@
               (speedColStats.speedCount / Math.max(1, speedColStats.total)) *
                 100,
             );
-            if (confidence < 70) {
+            if (
+              confidence < 70 &&
+              !detection.speedColumnDetectedByHeader
+            ) {
               detailsContent += `• 速度列检测置信度较低(${confidence}%)，可能需要手动调整<br>`;
               hasImportantNotes = true;
             }
