@@ -123,7 +123,18 @@
                 </div>
 
                 <div class="section-title">
-                  <span>📊 CSV列配置</span>
+                  <button
+                    type="button"
+                    id="csvColumnConfigToggle"
+                    class="csv-config-toggle"
+                    aria-expanded="false"
+                    aria-controls="csvColumnFields"
+                  >
+                    <span>📊 CSV列配置</span>
+                    <span class="csv-config-toggle-icon" aria-hidden="true">
+                      ▼
+                    </span>
+                  </button>
                   <button
                     class="btn btn-info"
                     style="
@@ -167,87 +178,89 @@
                   ></div>
                 </div>
 
-                <div class="csv-config-row">
-                  <div class="csv-form-group">
-                    <label for="ipColumn"
-                      >IP地址列
-                      <span class="help-inline">A列=0，B列=1</span></label
-                    >
-                    <div class="input-row">
-                      <input type="number" id="ipColumn" value="0" min="0" />
+                <div id="csvColumnFields" hidden>
+                  <div class="csv-config-row">
+                    <div class="csv-form-group">
+                      <label for="ipColumn"
+                        >IP地址列
+                        <span class="help-inline">A列=0，B列=1</span></label
+                      >
+                      <div class="input-row">
+                        <input type="number" id="ipColumn" value="0" min="0" />
+                      </div>
+                    </div>
+                    <div class="csv-form-group">
+                      <label for="portColumn"
+                        >端口列
+                        <span class="help-inline">-1表示无端口列</span></label
+                      >
+                      <div class="input-row">
+                        <input
+                          type="number"
+                          id="portColumn"
+                          value="-1"
+                          min="-1"
+                        />
+                      </div>
+                    </div>
+                    <div class="csv-form-group">
+                      <label for="cityColumn"
+                        >城市列
+                        <span class="help-inline">优先用于别名</span></label
+                      >
+                      <div class="input-row">
+                        <input
+                          type="number"
+                          id="cityColumn"
+                          value="-1"
+                          min="-1"
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div class="csv-form-group">
-                    <label for="portColumn"
-                      >端口列
-                      <span class="help-inline">-1表示无端口列</span></label
-                    >
-                    <div class="input-row">
-                      <input
-                        type="number"
-                        id="portColumn"
-                        value="-1"
-                        min="-1"
-                      />
-                    </div>
-                  </div>
-                  <div class="csv-form-group">
-                    <label for="cityColumn"
-                      >城市列
-                      <span class="help-inline">优先用于别名</span></label
-                    >
-                    <div class="input-row">
-                      <input
-                        type="number"
-                        id="cityColumn"
-                        value="-1"
-                        min="-1"
-                      />
-                    </div>
-                  </div>
-                </div>
 
-                <div class="csv-config-row">
-                  <div class="csv-form-group">
-                    <label for="countryColumn"
-                      >国家列
-                      <span class="help-inline">用于显示国家</span></label
-                    >
-                    <div class="input-row">
-                      <input
-                        type="number"
-                        id="countryColumn"
-                        value="-1"
-                        min="-1"
-                      />
+                  <div class="csv-config-row">
+                    <div class="csv-form-group">
+                      <label for="countryColumn"
+                        >国家列
+                        <span class="help-inline">用于显示国家</span></label
+                      >
+                      <div class="input-row">
+                        <input
+                          type="number"
+                          id="countryColumn"
+                          value="-1"
+                          min="-1"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div class="csv-form-group">
-                    <label for="regionColumn"
-                      >地区码列
-                      <span class="help-inline">如机场/州代码</span></label
-                    >
-                    <div class="input-row">
-                      <input
-                        type="number"
-                        id="regionColumn"
-                        value="-1"
-                        min="-1"
-                      />
+                    <div class="csv-form-group">
+                      <label for="regionColumn"
+                        >地区码列
+                        <span class="help-inline">如机场/州代码</span></label
+                      >
+                      <div class="input-row">
+                        <input
+                          type="number"
+                          id="regionColumn"
+                          value="-1"
+                          min="-1"
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div class="csv-form-group">
-                    <label for="speedColumn"
-                      >下载速度列
-                      <span class="help-inline">用于别名展示</span></label
-                    >
-                    <div class="input-row">
-                      <input
-                        type="number"
-                        id="speedColumn"
-                        value="-1"
-                        min="-1"
-                      />
+                    <div class="csv-form-group">
+                      <label for="speedColumn"
+                        >下载速度列
+                        <span class="help-inline">用于别名展示</span></label
+                      >
+                      <div class="input-row">
+                        <input
+                          type="number"
+                          id="speedColumn"
+                          value="-1"
+                          min="-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -445,18 +458,18 @@
                       <input
                         type="text"
                         id="host"
-                        value="node.kyma.dpdns.org"
+                        value="s.kyma.dpdns.org"
                       />
                       <select
                         aria-label="选择Host候选值"
                         onchange="
-                          document.getElementById('host').value = this.value;
+                          syncHostAndSni('host', this.value);
                           this.selectedIndex = 0;
                         "
                       >
                         <option value="" selected></option>
-                        <option value="node.kyma.dpdns.org">
-                          node.kyma.dpdns.org
+                        <option value="s.kyma.dpdns.org">
+                          s.kyma.dpdns.org
                         </option>
                         <option value="node.knny.dpdns.org">
                           node.knny.dpdns.org
@@ -479,17 +492,17 @@
                   <div class="form-group">
                     <label>SNI域名</label>
                     <div class="config-choice">
-                      <input type="text" id="sni" value="node.kyma.dpdns.org" />
+                      <input type="text" id="sni" value="s.kyma.dpdns.org" />
                       <select
                         aria-label="选择SNI候选值"
                         onchange="
-                          document.getElementById('sni').value = this.value;
+                          syncHostAndSni('sni', this.value);
                           this.selectedIndex = 0;
                         "
                       >
                         <option value="" selected></option>
-                        <option value="node.kyma.dpdns.org">
-                          node.kyma.dpdns.org
+                        <option value="s.kyma.dpdns.org">
+                          s.kyma.dpdns.org
                         </option>
                         <option value="node.knny.dpdns.org">
                           node.knny.dpdns.org
@@ -509,7 +522,24 @@
 
                   <div class="form-group">
                     <label>浏览器指纹 (fp)</label>
-                    <input type="text" id="fp" value="chrome" />
+                    <div class="config-choice">
+                      <input type="text" id="fp" value="chrome" />
+                      <select
+                        aria-label="选择浏览器指纹"
+                        onchange="
+                          document.getElementById('fp').value = this.value;
+                          this.selectedIndex = 0;
+                        "
+                      >
+                        <option value="" selected></option>
+                        <option value="chrome">chrome</option>
+                        <option value="firefox">firefox</option>
+                        <option value="safari">safari</option>
+                        <option value="ios">ios</option>
+                        <option value="android">android</option>
+                        <option value="edge">edge</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -519,12 +549,27 @@
                       >自定义Path参数
                       <span class="help-inline">默认: /?ed=2048</span></label
                     >
-                    <input
-                      type="text"
-                      id="customPath"
-                      value="/?ed=2048"
-                      placeholder="例如: /?ed=2048"
-                    />
+                    <div class="config-choice">
+                      <input
+                        type="text"
+                        id="customPath"
+                        value="/?ed=2048"
+                        placeholder="例如: /?ed=2048"
+                      />
+                      <select
+                        aria-label="选择自定义Path参数"
+                        onchange="
+                          document.getElementById('customPath').value = this.value;
+                          this.selectedIndex = 0;
+                        "
+                      >
+                        <option value="" selected></option>
+                        <option value="/?ed=2048">/?ed=2048</option>
+                        <option value="/?ed=2048&auth=knny96214">
+                          /?ed=2048&auth=knny96214
+                        </option>
+                      </select>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label
@@ -1759,6 +1804,25 @@
       }
 
       function initEvents() {
+        const csvColumnConfigToggle = document.getElementById(
+          "csvColumnConfigToggle",
+        );
+        const csvColumnFields = document.getElementById("csvColumnFields");
+        csvColumnConfigToggle.addEventListener("click", () => {
+          const isExpanded =
+            csvColumnConfigToggle.getAttribute("aria-expanded") === "true";
+          csvColumnConfigToggle.setAttribute(
+            "aria-expanded",
+            String(!isExpanded),
+          );
+          csvColumnFields.hidden = isExpanded;
+        });
+        document.getElementById("host").addEventListener("input", (event) => {
+          syncHostAndSni("host", event.target.value);
+        });
+        document.getElementById("sni").addEventListener("input", (event) => {
+          syncHostAndSni("sni", event.target.value);
+        });
         document
           .getElementById("fileInput")
           .addEventListener(
@@ -2660,6 +2724,12 @@
         return [...new Set(links)];
       }
 
+      function syncHostAndSni(source, value) {
+        const target = source === "host" ? "sni" : "host";
+        document.getElementById(source).value = value;
+        document.getElementById(target).value = value;
+      }
+
       function updateDirectVlessConfig(link, config) {
         const url = new URL(link);
         if (url.protocol !== "vless:" || !url.username || !url.hostname) {
@@ -3535,8 +3605,8 @@
           uuid:
             document.getElementById("uuid").value.trim() ||
             "99999999-9999-8999-9999-99abcdefabcd",
-          host: document.getElementById("host").value || "node.kyma.dpdns.org",
-          sni: document.getElementById("sni").value || "node.kyma.dpdns.org",
+          host: document.getElementById("host").value || "s.kyma.dpdns.org",
+          sni: document.getElementById("sni").value || "s.kyma.dpdns.org",
           customPath: document.getElementById("customPath").value.trim(),
           ech: document.getElementById("ech").value.trim(),
           fp: document.getElementById("fp").value.trim() || "chrome",

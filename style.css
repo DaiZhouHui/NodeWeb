@@ -215,6 +215,27 @@ body {
   font-weight: 500;
 }
 
+.csv-config-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.csv-config-toggle-icon {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.csv-config-toggle[aria-expanded="true"] .csv-config-toggle-icon {
+  transform: rotate(180deg);
+}
+
 .form-group {
   margin-bottom: 16px;
   position: relative;
@@ -484,9 +505,9 @@ textarea {
 }
 
 .config-choice select {
-  flex: 0 0 42px;
-  width: 42px;
-  padding: 10px 4px;
+  flex: 0 0 38px;
+  width: 38px;
+  padding: 10px 2px;
 }
 
 /* CSV专用：每行3列显示并将帮助信息放到输入框旁边（增加间距以防拥挤） */
