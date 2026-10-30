@@ -547,14 +547,16 @@
                   <div class="form-group">
                     <label
                       >自定义Path参数
-                      <span class="help-inline">默认: /?ed=2048</span></label
+                      <span class="help-inline"
+                        >默认: /knny96214?ed=2048</span
+                      ></label
                     >
                     <div class="config-choice">
                       <input
                         type="text"
                         id="customPath"
-                        value="/?ed=2048"
-                        placeholder="例如: /?ed=2048"
+                        value="/knny96214?ed=2048"
+                        placeholder="例如: /knny96214?ed=2048"
                       />
                       <select
                         aria-label="选择自定义Path参数"
@@ -565,6 +567,9 @@
                       >
                         <option value="" selected></option>
                         <option value="/?ed=2048">/?ed=2048</option>
+                        <option value="/knny96214?ed=2048">
+                          /knny96214?ed=2048
+                        </option>
                         <option value="/?ed=2048&auth=knny96214">
                           /?ed=2048&auth=knny96214
                         </option>
@@ -4380,10 +4385,10 @@
       function generateLink(ip, port, config, remark) {
         // IPv6地址需要用方括号包裹
         const formattedIP = getAddressType(ip) === "ipv6" ? `[${ip}]` : ip;
-        // 读取自定义Path参数，默认为 /?ed=2048
+        // 读取自定义Path参数，默认为 /knny96214?ed=2048
         const customPath = document.getElementById("customPath")
           ? document.getElementById("customPath").value.trim()
-          : "/?ed=2048";
+          : "/knny96214?ed=2048";
         const encodedPath = encodeURIComponent(customPath);
         const params = [
           "encryption=none",
